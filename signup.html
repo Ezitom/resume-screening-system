@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - EBEN</title>
+    <script>
+        (function () {
+            const theme = localStorage.getItem('eben-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/signup.css">
+</head>
+
+<body class="eben-login-body">
+    <nav class="eben-nav eben-nav--login">
+        <div class="eben-nav__inner">
+            <a href="index.html" class="eben-logo">
+                <span class="eben-logo__bar">|</span>
+                <span class="eben-logo__text">EBEN</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="eben-auth-main">
+        <div class="eben-auth-card">
+            <div class="eben-auth-header">
+                    <h2 class="eben-auth-title">Create Account</h2>
+                    <p class="eben-auth-subtitle">Join EBEN as a recruiter</p>
+                </div>
+
+                <form class="eben-auth-form">
+                    <div class="eben-form-group">
+                        <label class="eben-form-label eben-uppercase-label" for="signupName">Full Name</label>
+                        <input class="eben-input" type="text" id="signupName" placeholder="Sarah Okafor">
+                        <span class="eben-field-error" id="nameError"></span>
+                    </div>
+
+                    <div class="eben-form-group">
+                        <label class="eben-form-label eben-uppercase-label" for="signupEmail">Email Address</label>
+                        <input class="eben-input" type="email" id="signupEmail" placeholder="recruiter@email.com">
+                        <span class="eben-field-error" id="emailError"></span>
+                    </div>
+
+                    <div class="eben-form-group">
+                        <label class="eben-form-label eben-uppercase-label" for="signupPassword">Password</label>
+                        <input class="eben-input" type="password" id="signupPassword"
+                            placeholder="Create a strong password">
+                        <span class="eben-field-error" id="passwordError"></span>
+                        <div class="eben-password-strength">
+                            <div class="eben-password-strength__bar">
+                                <div class="eben-password-strength__fill" id="strengthFill"></div>
+                            </div>
+                            <span class="eben-password-strength__label" id="strengthLabel"></span>
+                        </div>
+                    </div>
+
+                    <div class="eben-form-group">
+                        <label class="eben-form-label eben-uppercase-label" for="signupConfirm">Confirm Password</label>
+                        <input class="eben-input" type="password" id="signupConfirm" placeholder="Repeat your password">
+                        <span class="eben-field-error" id="confirmError"></span>
+                    </div>
+
+                    <button class="eben-btn eben-btn-primary eben-btn-full" id="signupBtn" type="button">
+                        Create Account
+                    </button>
+
+                    <p class="eben-auth-switch">
+                        Already have an account? <a href="login.html" class="eben-link">Sign in</a>
+                    </p>
+                </form>
+            </div>
+    </main>
+
+    <script type="module" src="js/theme.js"></script>
+    <script type="module" src="js/signup.js"></script>
+</body>
+
+</html>

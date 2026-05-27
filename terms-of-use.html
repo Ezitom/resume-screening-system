@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Use - EBEN</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('eben-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <style>
+        .eben-legal-container {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 80px 24px;
+        }
+        .eben-legal-header {
+            margin-bottom: 48px;
+        }
+        .eben-legal-content h3 {
+            margin-top: 40px;
+            margin-bottom: 16px;
+        }
+        .eben-legal-content p {
+            margin-bottom: 24px;
+            color: var(--eben-text-primary);
+            opacity: 0.9;
+        }
+        .eben-legal-divider {
+            height: 1px;
+            background: var(--eben-border);
+            margin: 32px 0;
+        }
+        .eben-back-home {
+            display: inline-block;
+            margin-top: 48px;
+            color: var(--eben-text-secondary);
+            transition: color 0.2s ease;
+            text-decoration: none;
+        }
+        .eben-back-home:hover {
+            color: var(--eben-accent);
+        }
+    </style>
+</head>
+<body>
+    <nav class="eben-nav">
+        <div class="eben-container">
+            <a href="index.html" class="eben-logo">
+                <span class="eben-logo-bar"></span>EBEN
+            </a>
+            <div class="eben-nav-links">
+                <a href="open-positions.html" class="eben-nav-link">Open Positions</a>
+            </div>
+            <div class="eben-nav-actions">
+                <button class="eben-theme-toggle" aria-label="Toggle Theme">
+                    <!-- Icon injected by theme.js -->
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="eben-legal-container">
+            <header class="eben-legal-header">
+                <h1>Terms of Use</h1>
+                <p class="eben-text-secondary" style="font-size: 0.875rem;">Last updated: <span class="eben-footer-year"></span></p>
+                <div class="eben-legal-divider"></div>
+                <p>By accessing or using EBEN, you agree to be bound by these Terms of Use. Please read them carefully before using the platform.</p>
+            </header>
+
+            <div class="eben-legal-content">
+                <h3>Platform Access</h3>
+                <p>EBEN is a recruiter-facing platform. Candidate access is limited to the resume submission form accessed via a unique job-specific link provided by a recruiter.</p>
+
+                <h3>Recruiter Accounts</h3>
+                <p>Recruiter accounts are created by administrators only. Account credentials must not be shared. Recruiters are responsible for all activity conducted under their account.</p>
+
+                <h3>Acceptable Use</h3>
+                <p>The platform must not be used to discriminate against candidates on the basis of protected characteristics. Recruiters agree to use EBEN's evaluation scores as one input among many, not as the sole basis for hiring decisions.</p>
+
+                <h3>Intellectual Property</h3>
+                <p>All EBEN software, design, and content is the property of EBEN. Unauthorised reproduction or distribution is prohibited.</p>
+
+                <h3>Limitation of Liability</h3>
+                <p>EBEN provides its artificial intelligence scoring as a decision-support tool. We make no guarantees regarding hiring outcomes and are not liable for decisions made based on platform outputs.</p>
+
+                <h3>Changes to Terms</h3>
+                <p>We may update these terms at any time. Continued use of the platform constitutes acceptance of the updated terms.</p>
+
+                <h3>Contact</h3>
+                <p>For terms-related inquiries: <a href="mailto:legal@eben-platform.com" style="color: var(--eben-accent);">legal@eben-platform.com</a></p>
+            </div>
+
+            <a href="index.html" class="eben-back-home">← Back to Home</a>
+        </div>
+    </main>
+
+    <footer class="eben-footer">
+        <div class="eben-container">
+            <div class="eben-footer-grid">
+                <div class="eben-footer-brand">
+                    <div class="eben-logo">
+                        <span class="eben-logo-bar"></span>EBEN
+                    </div>
+                    <p class="eben-footer-tagline">Hire with Certainty.</p>
+                    <p class="eben-footer-description">An artificial intelligence powered resume screening and candidate evaluation platform.</p>
+                </div>
+                <div class="eben-footer-nav">
+                    <h4 class="eben-uppercase-label eben-footer-section-label">Platform</h4>
+                    <ul class="eben-footer-links">
+                        <li><a href="index.html" class="eben-footer-link">Home</a></li>
+                        <li><a href="open-positions.html" class="eben-footer-link">Open Positions</a></li>
+                    </ul>
+                </div>
+                <div class="eben-footer-info">
+                    <h4 class="eben-uppercase-label eben-footer-section-label">Information</h4>
+                    <ul class="eben-footer-links">
+                        <li><a href="index.html#how-it-works" class="eben-footer-link">How It Works</a></li>
+                        <li><a href="privacy-policy.html" class="eben-footer-link">Privacy Policy</a></li>
+                        <li><a href="terms-of-use.html" class="eben-footer-link">Terms of Use</a></li>
+                        <li><a href="support.html" class="eben-footer-link">Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="eben-footer-bottom">
+                <p>&copy; <span class="eben-footer-year"></span> EBEN. All rights reserved.</p>
+                <p>Built for modern recruitment teams.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="js/theme.js"></script>
+</body>
+</html>

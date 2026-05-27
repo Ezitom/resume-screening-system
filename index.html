@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EBEN - Hire with Certainty.</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('eben-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+    <nav class="eben-nav">
+        <div class="eben-container">
+            <a href="index.html" class="eben-logo">
+                <span class="eben-logo-bar"></span>EBEN
+            </a>
+            <div class="eben-nav-links">
+                <a href="index.html" class="eben-nav-link active">Home</a>
+                <a href="open-positions.html" class="eben-nav-link">Open Positions</a>
+                <a href="#how-it-works" class="eben-nav-link">How It Works</a>
+                <a href="#features" class="eben-nav-link">Features</a>
+            </div>
+            <div class="eben-nav-actions">
+                <button class="eben-theme-toggle" aria-label="Toggle Theme">
+                    <!-- Icon injected by theme.js -->
+                </button>
+                <button class="eben-hamburger" aria-label="Open Menu">
+                    <svg class="eben-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="eben-nav-overlay"></div>
+    <div class="eben-nav-drawer">
+        <a href="index.html" class="eben-nav-link active">Home</a>
+        <a href="open-positions.html" class="eben-nav-link">Open Positions</a>
+        <a href="#how-it-works" class="eben-nav-link">How It Works</a>
+        <a href="#features" class="eben-nav-link">Features</a>
+    </div>
+
+    <main>
+        <section class="eben-hero">
+            <div class="eben-container">
+                <div class="eben-hero-grid">
+                    <div class="eben-hero-content">
+                        <h1 class="eben-hero-title">Screen Smarter. <br>Hire with Certainty.</h1>
+                        <p class="eben-hero-subtext">EBEN uses artificial intelligence to screen resumes and evaluate candidate sustainability so you spend less time filtering and more time hiring right.</p>
+                        <a href="open-positions.html" class="eben-btn eben-btn-primary">View Open Positions</a>
+                    </div>
+                    <div class="eben-hero-visual">
+                        <div class="eben-hero-shape shape-1"></div>
+                        <div class="eben-hero-shape shape-2"></div>
+                        <div class="eben-hero-shape shape-3"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="eben-how-section">
+            <div class="eben-container">
+                <h2 class="eben-section-title">How It Works</h2>
+                <div class="eben-steps-container">
+                    <div class="eben-step">
+                        <div class="eben-step-number">1</div>
+                        <h3 class="eben-step-label">Post a Job</h3>
+                        <p class="eben-step-desc">Create your detailed job requirement.</p>
+                    </div>
+                    <div class="eben-step-line"></div>
+                    <div class="eben-step">
+                        <div class="eben-step-number">2</div>
+                        <h3 class="eben-step-label">Candidates Apply</h3>
+                        <p class="eben-step-desc">Resumes are submitted to your portal.</p>
+                    </div>
+                    <div class="eben-step-line"></div>
+                    <div class="eben-step">
+                        <div class="eben-step-number">3</div>
+                        <h3 class="eben-step-label">AI Scores. You Decide.</h3>
+                        <p class="eben-step-desc">Review ranked candidate evaluations.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="eben-features-section">
+            <div class="eben-container">
+                <h2 class="eben-section-title">Why EBEN</h2>
+                <div class="eben-features-grid">
+                    <div class="eben-card">
+                        <h3 class="eben-feature-title">Precision Scoring</h3>
+                        <p>AI evaluates every resume against the job requirements with clinical accuracy.</p>
+                    </div>
+                    <div class="eben-card">
+                        <h3 class="eben-feature-title">Instant Evaluation</h3>
+                        <p>Results available the moment a resume is submitted. No waiting, no backlog.</p>
+                    </div>
+                    <div class="eben-card">
+                        <h3 class="eben-feature-title">Recruiter Control</h3>
+                        <p>You decide who gets contacted. EBEN just does the groundwork for you.</p>
+                    </div>
+                    <div class="eben-card">
+                        <h3 class="eben-feature-title">Reduced Bias</h3>
+                        <p>Structured scoring keeps evaluations consistent, fair, and focused on merit.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="eben-footer">
+        <div class="eben-container">
+            <div class="eben-footer-grid">
+                <div class="eben-footer-brand">
+                    <div class="eben-logo">
+                        <span class="eben-logo-bar"></span>EBEN
+                    </div>
+                    <p class="eben-footer-tagline">Hire with Certainty.</p>
+                    <p class="eben-footer-description">An artificial intelligence powered resume screening and candidate evaluation platform.</p>
+                </div>
+                <div class="eben-footer-nav">
+                    <h4 class="eben-uppercase-label eben-footer-section-label">Platform</h4>
+                    <ul class="eben-footer-links">
+                        <li><a href="index.html" class="eben-footer-link">Home</a></li>
+                        <li><a href="open-positions.html" class="eben-footer-link">Open Positions</a></li>
+                    </ul>
+                </div>
+                <div class="eben-footer-info">
+                    <h4 class="eben-uppercase-label eben-footer-section-label">Information</h4>
+                    <ul class="eben-footer-links">
+                        <li><a href="index.html#how-it-works" class="eben-footer-link">How It Works</a></li>
+                        <li><a href="privacy-policy.html" class="eben-footer-link">Privacy Policy</a></li>
+                        <li><a href="terms-of-use.html" class="eben-footer-link">Terms of Use</a></li>
+                        <li><a href="support.html" class="eben-footer-link">Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="eben-footer-bottom">
+                <p>&copy; <span class="eben-footer-year"></span> EBEN. All rights reserved.</p>
+                <p>Built for modern recruitment teams.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="js/theme.js"></script>
+    <script type="module" src="js/nav.js"></script>
+</body>
+</html>

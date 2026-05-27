@@ -1,0 +1,218 @@
+/* job-postings.css */
+
+.eben-main-content {
+    padding: 60px 0;
+}
+
+.eben-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 48px;
+}
+
+.eben-job-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.eben-job-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative; /* REQUIRED — dropdown anchors to this */
+    overflow: visible;  /* REQUIRED — must NOT be hidden or the dropdown gets clipped */
+}
+
+.eben-job-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.eben-job-card__menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.eben-job-card__kebab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  border: none;
+  background: transparent; /* NO white background */
+  color: var(--eben-text-secondary); /* uses theme secondary text color */
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  padding: 0;
+}
+
+.eben-job-card__kebab:hover {
+  background: var(--eben-bg); /* subtle hover — page background color */
+  color: var(--eben-text-primary);
+}
+
+.eben-job-title {
+    font-size: 1.25rem;
+    margin: 8px 0;
+}
+
+.eben-job-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 0.875rem;
+    color: var(--eben-text-secondary);
+}
+
+.eben-job-card-footer {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--eben-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.eben-modal-title {
+    margin-bottom: 24px;
+}
+
+.eben-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 32px;
+}
+
+.eben-nav-user {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--eben-accent);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .eben-job-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .eben-job-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .eben-page-header {
+        flex-direction: column;
+        gap: 24px;
+    }
+    
+    .eben-btn {
+        width: 100%;
+    }
+
+    .eben-job-card-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .eben-job-card-footer .eben-badge {
+        align-self: flex-start;
+        margin-bottom: 4px;
+    }
+}
+
+
+
+.eben-job-card__menu {
+  position: absolute;
+  top: calc(100% + 4px); /* appears just below the kebab button */
+  right: 0;              /* aligns to the right edge of the wrapper */
+  background: var(--eben-surface);
+  border: 1px solid var(--eben-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  min-width: 160px;
+  z-index: 200;
+  overflow: visible;
+}
+
+.eben-job-card__menu[hidden] {
+  display: none;
+}
+
+.eben-job-card__menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--eben-text-primary);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.eben-job-card__menu-item:hover {
+  background: var(--eben-bg);
+}
+
+/* Set Open — accent color */
+.eben-job-card__menu-item--open {
+  color: var(--eben-success);
+}
+
+.eben-job-card__menu-item--open:hover {
+  background: rgba(58, 125, 68, 0.08);
+}
+
+/* Set Closed — warning color */
+.eben-job-card__menu-item--close {
+  color: var(--eben-warning);
+}
+
+.eben-job-card__menu-item--close:hover {
+  background: rgba(176, 125, 42, 0.08);
+}
+
+/* Delete — danger color */
+.eben-job-card__menu-item--delete {
+  color: var(--eben-danger);
+}
+
+.eben-job-card__menu-item--delete:hover {
+  background: rgba(163, 59, 59, 0.08);
+}
+
+#ebenJobDeadline {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: var(--eben-text-primary);
+  background: var(--eben-input-bg);
+  border: 1px solid var(--eben-input-border);
+  border-radius: 4px;
+  padding: 10px 14px;
+  height: 44px;
+  width: 100%;
+  cursor: pointer;
+}
+
+[data-theme="dark"] #ebenJobDeadline {
+  color-scheme: dark;
+}
+
+#ebenJobDeadline:focus {
+  outline: none;
+  border-color: var(--eben-accent);
+}

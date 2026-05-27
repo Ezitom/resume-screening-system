@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <script type="module" src="auth.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - EBEN</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('eben-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <script type="module">
+        (async function() {
+            const session = await getCurrentSession();
+            if (!session) window.location.href = 'login.html';
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/analytics.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="eben-body--recruiter">
+    <nav class="eben-nav">
+        <div class="eben-container">
+            <a href="index.html" class="eben-logo">
+                <span class="eben-logo-bar"></span>EBEN
+            </a>
+            <div class="eben-nav-links">
+                <a href="dashboard.html" class="eben-nav-link">Dashboard</a>
+                <a href="job-postings.html" class="eben-nav-link">Job Postings</a>
+                <a href="analytics.html" class="eben-nav-link active">Analytics</a>
+            </div>
+            <div class="eben-nav-actions">
+                <span class="eben-nav-user eben-nav__recruiter-name" id="nav-recruiter-name">Recruiter</span>
+                <a href="#" class="eben-nav-link eben-logout-link" id="logout-btn">Logout</a>
+                <button class="eben-theme-toggle" aria-label="Toggle Theme">
+                    <!-- Icon injected by theme.js -->
+                </button>
+                <button class="eben-hamburger" aria-label="Open Menu">
+                    <svg class="eben-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="eben-nav-overlay"></div>
+    <div class="eben-nav-drawer">
+        <a href="dashboard.html" class="eben-nav-link">Dashboard</a>
+        <a href="job-postings.html" class="eben-nav-link">Job Postings</a>
+        <a href="analytics.html" class="eben-nav-link active">Analytics</a>
+        <a href="#" class="eben-nav-link eben-logout-link" id="drawer-logout-btn">Logout</a>
+    </div>
+
+    <main class="eben-recruiter-main">
+        <div class="eben-container">
+            <header class="eben-page-header">
+                <div class="eben-header-text">
+                    <h1>Analytics & Insights</h1>
+                    <p class="eben-text-secondary">Overview of recruitment activity across all job postings</p>
+                </div>
+            </header>
+
+            <div class="eben-card eben-filter-bar">
+                <div class="eben-filter-group">
+                    <label class="eben-uppercase-label">From</label>
+                    <input type="date" class="eben-input" id="analytics-date-from" value="2025-10-20">
+                </div>
+                <div class="eben-filter-group">
+                    <label class="eben-uppercase-label">To</label>
+                    <input type="date" class="eben-input" id="analytics-date-to" value="2025-12-05">
+                </div>
+                <div class="eben-filter-group">
+                    <label class="eben-uppercase-label">Job Posting</label>
+                    <select class="eben-input" id="analytics-job-filter">
+                        <option>All Postings</option>
+                        <!-- Dynamically populated -->
+                    </select>
+                </div>
+                <div class="eben-filter-actions">
+                    <button class="eben-btn eben-btn-primary" id="apply-analytics-filters">Apply</button>
+                    <a href="#" class="eben-reset-link" id="reset-analytics-filters">Reset</a>
+                </div>
+            </div>
+            <div class="eben-inline-error" id="filter-error"></div>
+            <div id="analytics-updated" class="eben-text-secondary" style="margin-bottom: 24px; font-size: 0.75rem; display: none;"></div>
+
+            
+            <!-- ADDED BY AI FOR BUG 2 -->
+            <div class="eben-metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                <div class="eben-card" style="padding: 24px; text-align: center;">
+                    <h3 class="eben-uppercase-label">Total Jobs</h3>
+                    <div id="metric-total-jobs" style="font-size: 2rem; font-weight: bold; color: var(--eben-accent);">0</div>
+                </div>
+                <div class="eben-card" style="padding: 24px; text-align: center;">
+                    <h3 class="eben-uppercase-label">Open Positions</h3>
+                    <div id="metric-open-jobs" style="font-size: 2rem; font-weight: bold; color: var(--eben-success);">0</div>
+                </div>
+                <div class="eben-card" style="padding: 24px; text-align: center;">
+                    <h3 class="eben-uppercase-label">Total Applicants</h3>
+                    <div id="metric-total-applicants" style="font-size: 2rem; font-weight: bold; color: var(--eben-info);">0</div>
+                </div>
+                <div class="eben-card" style="padding: 24px; text-align: center;">
+                    <h3 class="eben-uppercase-label">Avg. Score</h3>
+                    <div id="metric-avg-score" style="font-size: 2rem; font-weight: bold; color: var(--eben-warning);">0</div>
+                </div>
+                <div class="eben-card" style="padding: 24px; text-align: center;">
+                    <h3 class="eben-uppercase-label">Avg. Sustainability</h3>
+                    <div id="metric-avg-sustainability" style="font-size: 2rem; font-weight: bold; color: var(--eben-text);">0</div>
+                </div>
+            </div>
+            <div class="eben-card" style="margin-bottom: 24px; padding: 24px;">
+                <h3 class="eben-uppercase-label">Top Scoring Candidates</h3>
+                <div id="metric-top-candidates" style="margin-top: 16px;"></div>
+            </div>
+            
+            <div class="eben-charts-grid">
+
+                <div class="eben-card eben-chart-card">
+                    <h3 class="eben-uppercase-label">Applications Over Time</h3>
+                    <div class="eben-chart-container">
+                        <canvas id="ebenChartTimeline"></canvas>
+                    </div>
+                </div>
+                <div class="eben-card eben-chart-card">
+                    <h3 class="eben-uppercase-label">Score Distribution</h3>
+                    <div class="eben-chart-container">
+                        <canvas id="ebenChartScores"></canvas>
+                    </div>
+                </div>
+                <div class="eben-card eben-chart-card">
+                    <h3 class="eben-uppercase-label">Top Skills Among Applicants</h3>
+                    <div class="eben-chart-container">
+                        <canvas id="ebenChartSkills"></canvas>
+                    </div>
+                </div>
+                <div class="eben-card eben-chart-card">
+                    <h3 class="eben-uppercase-label">Shortlist Rate by Job</h3>
+                    <div class="eben-chart-container">
+                        <canvas id="ebenChartShortlist"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <script type="module" src="js/theme.js"></script>
+    <script type="module" src="js/nav.js"></script>
+    <script type="module" src="js/analytics.js"></script>
+    <script type="module">
+        (async function() {
+            const user = await getCurrentUser();
+            if (user) {
+                const name = user.user_metadata?.full_name || user.email || 'Recruiter';
+                document.querySelectorAll('#nav-recruiter-name').forEach(el => el.textContent = name);
+            }
+            const logoutBtn = document.getElementById('logout-btn');
+            const drawerLogout = document.getElementById('drawer-logout-btn');
+            if (logoutBtn) logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logoutRecruiter(); });
+            if (drawerLogout) drawerLogout.addEventListener('click', (e) => { e.preventDefault(); logoutRecruiter(); });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <script type="module" src="auth.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - EBEN</title>
+    <script>
+        (function () {
+            const theme = localStorage.getItem('eben-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="eben-login-body">
+    <!-- Top Nav -->
+    <nav class="eben-nav--login">
+        <div class="eben-nav__inner">
+            <a href="index.html" class="eben-logo">
+                <span class="eben-logo-bar"></span>EBEN
+            </a>
+        </div>
+    </nav>
+
+    <main class="eben-auth-main">
+        <div class="eben-auth-card">
+            <div class="eben-auth-header">
+                <h2 class="eben-auth-title">Welcome Back</h2>
+                <p class="eben-auth-subtitle">Sign in to your recruiter account</p>
+            </div>
+
+            <div id="login-error" style="display: none; margin-bottom: 24px; padding: 16px; border-radius: 12px; background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #f87171; font-size: 0.9rem; text-align: center;"></div>
+
+            <form class="eben-auth-form" id="login-form">
+                <div class="eben-form-group">
+                    <label class="eben-form-label eben-uppercase-label" for="login-email">Email Address</label>
+                    <input class="eben-input" type="email" id="login-email" placeholder="recruiter@email.com" required>
+                </div>
+
+                <div class="eben-form-group">
+                    <label class="eben-form-label eben-uppercase-label" for="login-password">Password</label>
+                    <div style="position: relative; display: flex; align-items: center; width: 100%;">
+                        <input class="eben-input" type="password" id="login-password" placeholder="Enter your password" style="width: 100%; padding-right: 48px;" required>
+                        <button type="button" id="toggle-password-btn" style="position: absolute; right: 16px; background: transparent; border: none; color: rgba(255, 255, 255, 0.5); cursor: pointer; display: flex; align-items: center; justify-content: center; height: 100%;" aria-label="Toggle Password Visibility">
+                            <!-- Eye icon -->
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" id="eye-icon">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="eben-form-group eben-form-group--row">
+                    <label class="eben-checkbox-label" style="display: none;">
+                        <input type="checkbox" id="rememberMe" class="eben-checkbox">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="forgot-password.html" class="eben-auth-link" style="margin-left: auto;">Forgot password?</a>
+                </div>
+
+                <button class="eben-btn eben-btn-primary eben-btn-full" id="login-btn" type="submit">
+                    Login
+                </button>
+
+                <p class="eben-auth-switch" style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.4);">
+                    Invite‑only platform. Contact administration to request an account.
+                </p>
+            </form>
+        </div>
+    </main>
+
+    <script type="module" src="js/theme.js"></script>
+    <script type="module">
+        // Redirect if already logged in
+        redirectIfLoggedIn();
+
+        const loginForm = document.getElementById("login-form");
+        const loginBtn = document.getElementById("login-btn");
+        const emailInput = document.getElementById("login-email");
+        const passwordInput = document.getElementById("login-password");
+        const errorEl = document.getElementById("login-error");
+        const togglePasswordBtn = document.getElementById("toggle-password-btn");
+        const eyeIcon = document.getElementById("eye-icon");
+
+        // Toggle Password Visibility
+        togglePasswordBtn.addEventListener("click", () => {
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                eyeIcon.innerHTML = `
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                `;
+            } else {
+                passwordInput.type = "password";
+                eyeIcon.innerHTML = `
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                `;
+            }
+        });
+
+        // Form Submit Handler
+        loginForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            errorEl.style.display = "none";
+            loginBtn.disabled = true;
+            loginBtn.textContent = "Logging in...";
+
+            try {
+                await loginRecruiter(emailInput.value, passwordInput.value);
+                window.location.href = "dashboard.html";
+            } catch (err) {
+                // Map generic invalid login errors to "Incorrect email or password" to prevent user enumeration
+                if (err.message.includes("Invalid login credentials") || err.message.toLowerCase().includes("invalid")) {
+                    errorEl.textContent = "Incorrect email or password";
+                } else {
+                    errorEl.textContent = err.message;
+                }
+                errorEl.style.display = "block";
+                loginBtn.disabled = false;
+                loginBtn.textContent = "Login";
+            }
+        });
+    </script>
+</body>
+</html>

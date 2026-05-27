@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="supabase-client.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Application - EBEN</title>
+  <script>
+    (function () {
+      const theme = localStorage.getItem('eben-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/resume-upload.css">
+  <script type="module" src="resume-evaluator.js"></script>
+</head>
+
+<body>
+  <header class="eben-minimal-header">
+    <div class="eben-container">
+      <a href="index.html" class="eben-logo eben-logo-centered">
+        <span class="eben-logo-bar"></span>EBEN
+      </a>
+      <button class="eben-theme-toggle eben-header-toggle" aria-label="Toggle Theme">
+        <!-- Icon injected by theme.js -->
+      </button>
+    </div>
+  </header>
+
+  <main class="eben-upload-main">
+    <div class="eben-container">
+      <div class="eben-card eben-upload-card" id="upload-card">
+        <div id="ebenUploadForm">
+          <div class="eben-upload-header">
+            <h2>Applying for: <span id="target-job-title">Senior Backend Engineer</span></h2>
+            <p class="eben-text-secondary">Submitted applications are reviewed by our recruitment team.</p>
+          </div>
+
+          <div class="eben-form">
+            <div class="eben-form-group">
+              <label class="eben-form-label eben-uppercase-label">Full Name</label>
+              <input type="text" id="ebenCandidateName" class="eben-input" placeholder="Jane Doe">
+              <span class="eben-field-error" id="ebenNameError"></span>
+            </div>
+            <div class="eben-form-row">
+              <div class="eben-form-group">
+                <label class="eben-form-label eben-uppercase-label">Email</label>
+                <input type="email" id="ebenCandidateEmail" class="eben-input" placeholder="jane@example.com">
+                <span class="eben-field-error" id="ebenEmailError"></span>
+              </div>
+              <div class="eben-form-group">
+                <label class="eben-form-label eben-uppercase-label">Phone</label>
+                <input type="tel" id="ebenCandidatePhone" class="eben-input" placeholder="+234...">
+                <span class="eben-field-error" id="ebenPhoneError"></span>
+              </div>
+            </div>
+            <div class="eben-form-group">
+              <label class="eben-form-label eben-uppercase-label">Years of Experience</label>
+              <input type="number" id="ebenCandidateExperience" class="eben-input" placeholder="e.g. 5">
+              <span class="eben-field-error" id="ebenExpError"></span>
+            </div>
+
+            <!-- SUSTAINABILITY & VALUES STATEMENT -->
+            <div class="eben-form-group"
+              style="margin-top: 28px; border-top: 1px solid var(--eben-border); padding-top: 24px;">
+              <label class="eben-form-label" for="sustainability-answer"
+                style="font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                Sustainability &amp; Values Statement
+                <span style="color: var(--eben-danger); font-size: 1rem;">*</span>
+              </label>
+              <p style="font-size: 0.82rem; color: var(--eben-text-secondary); margin: 0 0 10px; line-height: 1.5;">
+                Describe any sustainability initiatives, social responsibility efforts, community involvement,
+                environmental awareness, ethical work practices, or values-driven projects you have been
+                involved in either professionally or personally. This is a required field.
+              </p>
+              <textarea id="sustainability-answer" class="eben-input" rows="5"
+                placeholder="e.g. I volunteered with a local environmental NGO where I helped organise community clean-up drives. Professionally, I championed a green IT initiative at my last company that reduced server energy consumption by 30%..."
+                style="resize: vertical; min-height: 120px; font-family: var(--font-body); font-size: 0.9rem; line-height: 1.6;"></textarea>
+              <span id="sustainability-error" class="eben-field-error"
+                style="display:none; color: var(--eben-danger); font-size: 0.8rem; margin-top: 6px;">⚠ Please describe
+                your sustainability values (minimum 50 characters required).</span>
+              <p id="sustainability-char-count"
+                style="font-size: 0.75rem; color: var(--eben-text-secondary); text-align: right; margin: 4px 0 0;">0 /
+                50 minimum characters</p>
+            </div>
+
+            <!-- Upload Zone -->
+            <div class="eben-form-group" style="margin-top: 28px; border-top: 1px solid var(--eben-border); padding-top: 24px;">
+              <label class="eben-form-label" style="font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+                Resume or CV <span style="color: var(--eben-danger); font-size: 1rem;">*</span>
+              </label>
+              <div class="eben-upload-zone" id="ebenUploadZone">
+                <input type="file" id="ebenFileInput"
+                  accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
+                  style="display: none;" tabindex="-1" aria-hidden="true">
+
+                <svg class="eben-icon eben-icon--lg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <polyline points="16 16 12 12 8 16" />
+                  <line x1="12" y1="12" x2="12" y2="21" />
+                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+                </svg>
+
+                <p class="eben-upload-zone__label">Drag your PDF or Word (.docx) file here, or click to browse</p>
+                <p class="eben-upload-zone__hint">PDF or DOCX files only &middot; Max 5MB</p>
+                <p class="eben-upload-zone__filename" id="ebenFileName"></p>
+
+                <button type="button" class="eben-upload-zone__remove" id="ebenRemoveFile"
+                  aria-label="Remove selected file" style="display: none;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                  Remove
+                </button>
+              </div>
+              <span class="eben-field-error" id="ebenFileError"></span>
+            </div>
+
+            <button type="button" class="eben-btn eben-btn-primary eben-btn-full" id="ebenSubmitBtnNew"
+              style="margin-top: 24px;">Submit Application</button>
+            
+            <div id="upload-status" style="display:none; margin-top:16px; color:#6b7280; text-align:center;">⏳ Analyzing
+              resume...</div>
+            <div id="upload-error" style="display:none; margin-top:16px; color:#ef4444; text-align:center;"></div>
+            <div id="upload-success" style="display:none; margin-top:16px; color:#22c55e; text-align:center;">✅ Resume
+              analyzed successfully!</div>
+
+            <div id="ebenSuccessState" style="display: none;">
+              <svg class="eben-icon eben-icon--success" width="56" height="56" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                style="color: var(--eben-success); margin-bottom: 24px;">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <h2 style="font-family: var(--font-heading); color: var(--eben-text-primary); margin: 0 0 12px;">Application
+                Submitted</h2>
+              <p style="font-family: var(--font-body); color: var(--eben-text-secondary); margin: 0;">Thank you. You will be
+                contacted if you are shortlisted for this role.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="eben-footer">
+    <div class="eben-container">
+      <div class="eben-footer-grid">
+        <div class="eben-footer-brand">
+          <div class="eben-logo">
+            <span class="eben-logo-bar"></span>EBEN
+          </div>
+          <p class="eben-footer-tagline">Hire with Certainty.</p>
+          <p class="eben-footer-description">An artificial intelligence powered resume screening and candidate evaluation
+            platform.</p>
+        </div>
+        <div class="eben-footer-nav">
+          <h4 class="eben-uppercase-label eben-footer-section-label">Platform</h4>
+          <ul class="eben-footer-links">
+            <li><a href="index.html" class="eben-footer-link">Home</a></li>
+            <li><a href="open-positions.html" class="eben-footer-link">Open Positions</a></li>
+          </ul>
+        </div>
+        <div class="eben-footer-info">
+          <h4 class="eben-uppercase-label eben-footer-section-label">Information</h4>
+          <ul class="eben-footer-links">
+            <li><a href="index.html#how-it-works" class="eben-footer-link">How It Works</a></li>
+            <li><a href="privacy-policy.html" class="eben-footer-link">Privacy Policy</a></li>
+            <li><a href="terms-of-use.html" class="eben-footer-link">Terms of Use</a></li>
+            <li><a href="support.html" class="eben-footer-link">Support</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="eben-footer-bottom">
+        <p>&copy; <span class="eben-footer-year"></span> EBEN. All rights reserved.</p>
+        <p>Built for modern recruitment teams.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="js/theme.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+  <script>
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+  <script type="module" src="js/resume-upload.js"></script>
+  <script type="module">
+    async function saveCandidateToSupabase(candidateRecord, evaluation) {
+      try {
+        // Get job info from URL
+        const jobTitle = new URLSearchParams(window.location.search).get("job") || "Unknown Job";
+
+        // 1. Save candidate to Supabase candidates table
+        const { data: candidate, error: candidateError } = await supabaseClient
+          .from("candidates")
+          .insert([{
+            name: candidateRecord.name,
+            email: candidateRecord.email,
+            phone: candidateRecord.phone,
+            years_of_experience: candidateRecord.yearsExp,
+            date_applied: new Date().toISOString(),
+            job_title: jobTitle,
+            resume_summary: evaluation.summary || "",
+            technical_skills: JSON.stringify(evaluation.technicalSkills || []),
+            education: JSON.stringify(evaluation.education || []),
+            experience: JSON.stringify(evaluation.experience || []),
+            skills_match_score: evaluation.scores?.skillsMatch?.score || 0,
+            experience_score: evaluation.scores?.experienceLevel?.score || 0,
+            education_score: evaluation.scores?.education?.score || 0,
+            communication_score: evaluation.scores?.communication?.score || 0,
+            leadership_score: evaluation.scores?.leadership?.score || 0,
+            sustainability_score: evaluation.scores?.sustainability?.score || 0,
+            overall_score: evaluation.scores?.overallScore?.score || 0,
+            sustainability_answer: evaluation.sustainabilityAnswer || "",
+            score_reasons: JSON.stringify({ ...(evaluation.scores || {}), resumeText: evaluation.resumeText || "" })
+          }])
+          .select()
+          .single();
+
+        if (candidateError) throw candidateError;
+
+        // 2. Save application to Supabase applications table
+        const { error: applicationError } = await supabaseClient
+          .from("applications")
+          .insert([{
+            candidate_id: candidate.id,
+            job_title: jobTitle,
+            status: "pending",
+            overall_score: evaluation.scores?.overallScore?.score || 0,
+            created_at: new Date().toISOString()
+          }]);
+
+        if (applicationError) throw applicationError;
+
+        return candidate.id;
+
+      } catch (error) {
+        console.error("❌ Supabase save error:", error);
+        throw new Error("Failed to save candidate: " + error.message);
+      }
+    }
+
+    async function handleResumeSubmit(event) {
+      event.preventDefault();
+      const fileInput = document.getElementById("ebenFileInput");
+      const statusEl = document.getElementById("upload-status");
+      const errorEl = document.getElementById("upload-error");
+      const successEl = document.getElementById("upload-success");
+      const submitBtn = document.getElementById("ebenSubmitBtnNew");
+      const successState = document.getElementById("ebenSuccessState");
+
+      // --- SUSTAINABILITY VALIDATION ---
+      const sustainabilityAnswer = document.getElementById("sustainability-answer")?.value?.trim();
+      const sustainabilityError = document.getElementById("sustainability-error");
+      if (!sustainabilityAnswer || sustainabilityAnswer.length < 50) {
+        if (sustainabilityError) sustainabilityError.style.display = "block";
+        document.getElementById("sustainability-answer")?.focus();
+        return;
+      }
+      if (sustainabilityError) sustainabilityError.style.display = "none";
+
+      statusEl.style.display = "block";
+      errorEl.style.display = "none";
+      successEl.style.display = "none";
+      if (successState) successState.style.display = "none";
+      if (submitBtn) submitBtn.disabled = true;
+
+      // Use the exposed dragged-and-dropped file if available, fallback to the file input
+      const file = (typeof window.getEbenSelectedFile === 'function' ? window.getEbenSelectedFile() : null) || fileInput?.files?.[0];
+
+      if (!file) {
+        statusEl.style.display = "none";
+        errorEl.style.display = "block";
+        errorEl.textContent = "Please select a resume file to upload.";
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+
+      try {
+        const evaluation = await ResumeEvaluator.evaluate(file, sustainabilityAnswer);
+        const candidateId = Date.now().toString();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobTitle = urlParams.get("job") || "Unknown Job";
+        const jobId = urlParams.get("jobId") || "";
+
+        const candidateRecord = {
+          id: candidateId,
+          jobTitle: jobTitle,
+          jobId: jobId,
+          name: document.getElementById("ebenCandidateName")?.value || evaluation.extractedName || "",
+          email: document.getElementById("ebenCandidateEmail")?.value || evaluation.extractedEmail || "",
+          phone: document.getElementById("ebenCandidatePhone")?.value || evaluation.extractedPhone || "",
+          yearsExp: document.getElementById("ebenCandidateExperience")?.value || evaluation.yearsOfExperience || "",
+          dateApplied: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ''),
+          date: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ''),
+          status: "Pending",
+          evaluation: evaluation
+        };
+
+        await saveCandidateToSupabase(candidateRecord, evaluation);
+
+        statusEl.style.display = "none";
+        successEl.style.display = "block";
+        
+        if (successState) {
+          successState.style.display = "flex";
+          successState.style.flexDirection = "column";
+          successState.style.alignItems = "center";
+          successState.style.textAlign = "center";
+          successState.style.marginTop = "24px";
+          successState.style.padding = "24px";
+          successState.style.border = "1px solid var(--eben-success, #22c55e)";
+          successState.style.borderRadius = "8px";
+          successState.style.backgroundColor = "rgba(34, 197, 94, 0.05)";
+        }
+
+        // Clear the form fields
+        if (document.getElementById("ebenCandidateName")) document.getElementById("ebenCandidateName").value = "";
+        if (document.getElementById("ebenCandidateEmail")) document.getElementById("ebenCandidateEmail").value = "";
+        if (document.getElementById("ebenCandidatePhone")) document.getElementById("ebenCandidatePhone").value = "";
+        if (document.getElementById("ebenCandidateExperience")) document.getElementById("ebenCandidateExperience").value = "";
+        if (document.getElementById("sustainability-answer")) document.getElementById("sustainability-answer").value = "";
+        if (document.getElementById("sustainability-char-count")) document.getElementById("sustainability-char-count").textContent = "0 / 50 minimum characters";
+        if (fileInput) fileInput.value = "";
+        if (document.getElementById("ebenFileName")) document.getElementById("ebenFileName").textContent = "";
+        const uploadZone = document.getElementById("ebenUploadZone");
+        if (uploadZone) uploadZone.classList.remove("eben-upload-zone--has-file");
+        if (submitBtn) submitBtn.disabled = false;
+
+
+      } catch (err) {
+        console.error("Evaluation failed:", err);
+        statusEl.style.display = "none";
+        errorEl.style.display = "block";
+        errorEl.textContent = "Evaluation failed: " + err.message;
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    }
+
+    const resumeForm = document.getElementById("ebenSubmitBtnNew");
+    if (resumeForm) resumeForm.addEventListener("click", handleResumeSubmit);
+
+    // Live character counter for sustainability textarea
+    document.addEventListener("DOMContentLoaded", function () {
+      const textarea = document.getElementById("sustainability-answer");
+      const counter = document.getElementById("sustainability-char-count");
+      const errorSpan = document.getElementById("sustainability-error");
+
+      if (textarea && counter) {
+        textarea.addEventListener("input", function () {
+          const len = textarea.value.trim().length;
+          counter.textContent = len + " / 50 minimum characters";
+          if (len >= 50) {
+            counter.style.color = "var(--eben-success, #22c55e)";
+            if (errorSpan) errorSpan.style.display = "none";
+          } else {
+            counter.style.color = "var(--eben-text-secondary)";
+          }
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

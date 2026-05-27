@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="supabase-client.js"></script>
+    <script type="module" src="auth.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Postings - EBEN</title>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('eben-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <script type="module">
+        (async function() {
+            const session = await getCurrentSession();
+            if (!session) window.location.href = 'login.html';
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/job-postings.css">
+</head>
+<body class="eben-body--recruiter">
+    <nav class="eben-nav">
+        <div class="eben-container">
+            <a href="index.html" class="eben-logo">
+                <span class="eben-logo-bar"></span>EBEN
+            </a>
+            <div class="eben-nav-links">
+                <a href="dashboard.html" class="eben-nav-link">Dashboard</a>
+                <a href="job-postings.html" class="eben-nav-link active">Job Postings</a>
+                <a href="analytics.html" class="eben-nav-link">Analytics</a>
+            </div>
+            <div class="eben-nav-actions">
+                <span class="eben-nav-user eben-nav__recruiter-name" id="nav-recruiter-name">Recruiter</span>
+                <a href="#" class="eben-nav-link eben-logout-link" id="logout-btn">Logout</a>
+                <button class="eben-theme-toggle" aria-label="Toggle Theme">
+                    <!-- Icon injected by theme.js -->
+                </button>
+                <button class="eben-hamburger" aria-label="Open Menu">
+                    <svg class="eben-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="eben-nav-overlay"></div>
+    <div class="eben-nav-drawer">
+        <a href="dashboard.html" class="eben-nav-link">Dashboard</a>
+        <a href="job-postings.html" class="eben-nav-link active">Job Postings</a>
+        <a href="analytics.html" class="eben-nav-link">Analytics</a>
+        <a href="#" class="eben-nav-link eben-logout-link" id="drawer-logout-btn">Logout</a>
+    </div>
+
+    <main class="eben-recruiter-main">
+        <div class="eben-container">
+            <header class="eben-page-header">
+                <div class="eben-header-text">
+                    <h1>Job Postings</h1>
+                    <p class="eben-text-secondary">Manage and track your active recruitment positions</p>
+                </div>
+                <button class="eben-btn eben-btn-primary" id="new-posting-btn">
+                    <svg class="eben-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    New Posting
+                </button>
+            </header>
+
+            <div class="eben-job-grid" id="job-postings-grid">
+                <!-- Dynamically rendered by job-postings.js -->
+            </div>
+        </div>
+    </main>
+
+    <!-- New Posting Modal -->
+    <div class="eben-modal-overlay" id="new-posting-modal">
+        <div class="eben-modal">
+            <h2 class="eben-modal-title">Create New Job Posting</h2>
+            <form class="eben-form" id="new-posting-form">
+                <div class="eben-form-group">
+                    <label class="eben-form-label eben-uppercase-label">Job Title</label>
+                    <input type="text" id="job-title" class="eben-input" placeholder="e.g. Senior Backend Engineer" required>
+                </div>
+                <div class="eben-form-group">
+                    <label class="eben-form-label eben-uppercase-label">Department</label>
+                    <select id="job-dept" class="eben-input">
+                        <option>Engineering</option>
+                        <option>Product Design</option>
+                        <option>Business Intelligence</option>
+                        <option>Human Resources</option>
+                        <option>Infrastructure</option>
+                        <option>Product</option>
+                    </select>
+                </div>
+                <div class="eben-form-group">
+                    <label class="eben-form-label eben-uppercase-label">Job Description</label>
+                    <textarea id="job-desc" class="eben-input" rows="4" placeholder="Describe the role..."></textarea>
+                </div>
+                <div class="eben-form-group">
+                    <label class="eben-form-label eben-uppercase-label">Required Skills</label>
+                    <input type="text" id="job-skills" class="eben-input" placeholder="Python, Django, SQL (comma separated)">
+                </div>
+                <div class="eben-form-group">
+                    <label class="eben-form-label eben-uppercase-label">Experience Level</label>
+                    <select id="job-exp" class="eben-input">
+                        <option>Junior (1-2 years)</option>
+                        <option>Mid-level (3-5 years)</option>
+                        <option>Senior (5+ years)</option>
+                        <option>Lead / Managerial</option>
+                    </select>
+                </div>
+                <div class="eben-form-group">
+                    <label class="eben-form-label eben-uppercase-label">Application Deadline</label>
+                    <input type="date" id="ebenJobDeadline" class="eben-input">
+                    <span class="eben-field-error" id="ebenDeadlineError"></span>
+                </div>
+                <div class="eben-modal-actions">
+                    <button type="button" class="eben-btn eben-btn-outline" id="modal-cancel">Cancel</button>
+                    <button type="submit" class="eben-btn eben-btn-primary">Create Posting</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script type="module" src="js/theme.js"></script>
+    <script type="module" src="js/nav.js"></script>
+    <script type="module" src="js/eben-data.js"></script>
+    <script type="module" src="js/job-postings.js"></script>
+    <script type="module">
+        (async function() {
+            const user = await getCurrentUser();
+            if (user) {
+                const name = user.user_metadata?.full_name || user.email || 'Recruiter';
+                document.querySelectorAll('#nav-recruiter-name').forEach(el => el.textContent = name);
+            }
+            const logoutBtn = document.getElementById('logout-btn');
+            const drawerLogout = document.getElementById('drawer-logout-btn');
+            if (logoutBtn) logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logoutRecruiter(); });
+            if (drawerLogout) drawerLogout.addEventListener('click', (e) => { e.preventDefault(); logoutRecruiter(); });
+        })();
+    </script>
+</body>
+</html>

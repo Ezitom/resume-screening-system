@@ -1,0 +1,170 @@
+/* index.css - Landing Page Styles */
+
+.eben-hero {
+    padding: 120px 0;
+    overflow: hidden;
+}
+
+.eben-hero-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 64px;
+    align-items: center;
+}
+
+.eben-hero-title {
+    margin-bottom: 24px;
+}
+
+.eben-hero-subtext {
+    font-size: 1.25rem;
+    color: var(--eben-text-secondary);
+    margin-bottom: 40px;
+    max-width: 580px;
+}
+
+.eben-hero-visual {
+    position: relative;
+    height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.eben-hero-shape {
+    position: absolute;
+    border: 2px solid var(--eben-border);
+    border-radius: 6px;
+}
+
+.shape-1 {
+    width: 300px;
+    height: 300px;
+    border-color: var(--eben-accent);
+    transform: rotate(15deg);
+    z-index: 2;
+}
+
+.shape-2 {
+    width: 300px;
+    height: 300px;
+    top: 40px;
+    left: 40px;
+    background-color: var(--eben-surface);
+    transform: rotate(-10deg);
+    z-index: 1;
+}
+
+.shape-3 {
+    width: 320px;
+    height: 320px;
+    top: -20px;
+    right: -20px;
+    border-color: var(--eben-border);
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+/* How It Works Section */
+.eben-how-section {
+    padding: 100px 0;
+    background-color: var(--eben-row-alt);
+}
+
+.eben-section-title {
+    text-align: center;
+    margin-bottom: 64px;
+}
+
+.eben-steps-container {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.eben-step {
+    flex: 1;
+    text-align: center;
+    padding: 0 20px;
+    position: relative;
+}
+
+.eben-step-number {
+    font-family: var(--font-heading);
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--eben-accent);
+    line-height: 1;
+    margin-bottom: 16px;
+}
+
+.eben-step-label {
+    margin-bottom: 8px;
+}
+
+.eben-step-desc {
+    color: var(--eben-text-secondary);
+    font-size: 0.9375rem;
+}
+
+.eben-step-line {
+    width: 100px;
+    height: 1px;
+    background-color: var(--eben-border);
+    margin-top: 40px;
+}
+
+/* Features Section */
+.eben-features-section {
+    padding: 100px 0;
+}
+
+.eben-features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+}
+
+.eben-feature-title {
+    margin-bottom: 12px;
+    color: var(--eben-accent);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .eben-hero-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .eben-hero-subtext {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .eben-hero-visual {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .eben-hero {
+        padding: 80px 0;
+    }
+
+    .eben-steps-container {
+        flex-direction: column;
+        gap: 48px;
+        align-items: center;
+    }
+
+    .eben-step-line {
+        display: none;
+    }
+
+    .eben-features-grid {
+        grid-template-columns: 1fr;
+    }
+}

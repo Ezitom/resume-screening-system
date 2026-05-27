@@ -1,0 +1,37 @@
+/* signup.css - Signup specific styles (Shared styles are in login.css) */
+
+.eben-input-wrapper {
+    position: relative;
+}
+
+.eben-input-eye {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--eben-text-secondary);
+    display: flex;
+    align-items: center;
+    padding: 0;
+}
+
+.eben-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    color: var(--eben-text-secondary);
+}
+
+.eben-field-error {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--eben-danger);
+    margin-top: 4px;
+    min-height: 1.2em;
+}

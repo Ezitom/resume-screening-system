@@ -1,0 +1,65 @@
+/* analytics.css */
+
+.eben-main-content {
+    padding: 60px 0;
+}
+
+.eben-page-header {
+    margin-bottom: 40px;
+}
+
+.eben-filter-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.eben-filter-group {
+    flex: 1;
+    min-width: 180px;
+}
+
+.eben-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+}
+
+.eben-chart-card {
+    padding: 32px;
+}
+
+.eben-chart-card h3 {
+    margin-bottom: 32px;
+    color: var(--eben-text-secondary);
+}
+
+.eben-chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .eben-charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .eben-filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .eben-filter-actions {
+        margin-top: 8px;
+    }
+
+    .eben-btn {
+        width: 100%;
+    }
+}

@@ -1,0 +1,311 @@
+/* candidate-details.css */
+
+.eben-main-content {
+    padding: 40px 0;
+}
+
+.eben-breadcrumb {
+    margin-bottom: 32px;
+    font-size: 0.875rem;
+    color: var(--eben-text-secondary);
+}
+
+.eben-breadcrumb a {
+    color: var(--eben-text-secondary);
+}
+
+.eben-breadcrumb a:hover {
+    color: var(--eben-accent);
+}
+
+.eben-details-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 32px;
+    align-items: flex-start;
+}
+
+/* Sidebar */
+.eben-profile-card {
+    text-align: center;
+    padding: 32px 24px;
+}
+
+.eben-candidate-name {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.eben-score-circle-wrapper {
+    margin: 32px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.eben-score-circle {
+    width: 120px;
+    height: 120px;
+    border: 4px solid var(--eben-accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.eben-score-value {
+    font-family: var(--font-body);
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--eben-accent);
+}
+
+.eben-full-width-badge {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+.eben-sidebar-divider {
+    height: 1px;
+    background-color: var(--eben-border);
+    margin: 24px 0;
+}
+
+.eben-contact-info {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.eben-contact-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.eben-contact-item span:last-child {
+    font-weight: 500;
+}
+
+.eben-sidebar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 32px;
+    text-align: left;
+}
+
+.eben-back-link {
+    display: block;
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.875rem;
+    color: var(--eben-text-secondary);
+}
+
+.eben-back-link:hover {
+    color: var(--eben-accent);
+}
+
+/* Content Panel & Tabs */
+.eben-tabs-card {
+    padding: 0;
+}
+
+.eben-tabs-header {
+    display: flex;
+    border-bottom: 1px solid var(--eben-border);
+    background-color: var(--eben-row-alt);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+.eben-tab-btn {
+    padding: 16px 32px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--eben-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.eben-tab-btn:hover {
+    color: var(--eben-text-primary);
+}
+
+.eben-tab-btn.active {
+    color: var(--eben-accent);
+    border-bottom-color: var(--eben-accent);
+    background-color: var(--eben-surface);
+}
+
+.eben-tab-content {
+    display: none;
+    padding: 40px;
+}
+
+.eben-tab-content.active {
+    display: block;
+}
+
+/* Evaluation Tab */
+.eben-evaluation-overview {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 48px;
+    align-items: center;
+    margin-bottom: 48px;
+}
+
+.eben-gauge-container {
+    text-align: center;
+}
+
+.eben-svg-gauge {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.eben-gauge-text {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 1.5rem;
+    fill: var(--eben-text-primary);
+}
+
+.eben-evaluation-status .eben-badge-lg {
+    padding: 8px 24px;
+    font-size: 1rem;
+    margin-bottom: 16px;
+}
+
+.eben-breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.eben-breakdown-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.eben-breakdown-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+/* Resume Summary Tab */
+.eben-summary-section {
+    margin-bottom: 40px;
+}
+
+.eben-summary-section:last-child {
+    margin-bottom: 0;
+}
+
+.eben-summary-section h3 {
+    margin-bottom: 16px;
+    color: var(--eben-accent);
+}
+
+.eben-summary-section p {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+.eben-skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.eben-skill-chip {
+    padding: 6px 16px;
+    background-color: var(--eben-row-alt);
+    border: 1px solid var(--eben-border);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.eben-edu-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.eben-exp-item {
+    margin-bottom: 24px;
+}
+
+.eben-exp-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+/* Notes Tab */
+.eben-notes-form {
+    margin-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.eben-notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.eben-note-item {
+    padding: 20px;
+    background-color: var(--eben-row-alt);
+    border-radius: 4px;
+    border-left: 4px solid var(--eben-border);
+}
+
+.eben-note-text {
+    margin-bottom: 8px;
+    font-style: italic;
+}
+
+.eben-note-meta {
+    font-size: 0.75rem;
+    color: var(--eben-text-secondary);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .eben-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .eben-evaluation-overview {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 32px;
+    }
+
+    .eben-tab-content {
+        padding: 24px;
+    }
+    
+    .eben-tab-btn {
+        padding: 16px;
+        flex: 1;
+        text-align: center;
+    }
+}
