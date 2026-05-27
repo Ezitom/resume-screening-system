@@ -5,6 +5,7 @@
 .env.production
 .env.staging
 .env.*
+!.env.example
 
 # Dependencies
 node_modules/
