@@ -25,7 +25,7 @@ evaluation system built with JavaScript, Vite, Supabase, and the Groq AI API.
 3. Copy `.env.example` to `.env`
 4. Fill in your API keys in the `.env` file
 5. Run `npm run dev` to start the development server
-6. Open `http://localhost:5173` in your browser
+6. Open `https://ezitom.vercel.app` in your browser
 
 ## Environment Variables
 See `.env.example` for required environment variables.
