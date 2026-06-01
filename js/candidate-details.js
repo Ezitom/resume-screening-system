@@ -716,20 +716,12 @@ async function sendShortlistEmail() {
     statusEl.style.display = 'none';
 
     try {
-        const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
-
-        if (!RESEND_API_KEY) {
-            throw new Error('Resend API key is not configured. Please add VITE_RESEND_API_KEY to your environment variables.');
-        }
-
-        const response = await fetch('https://api.resend.com/emails', {
+        const response = await fetch('/api/send-email', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${RESEND_API_KEY}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                from: 'onboarding@resend.dev',
                 to: candidateEmail,
                 subject: `Congratulations! You have been shortlisted for ${jobTitle}`,
                 html: `
@@ -794,20 +786,12 @@ async function sendRejectionEmail() {
     statusEl.style.display = 'none';
 
     try {
-        const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
-
-        if (!RESEND_API_KEY) {
-            throw new Error('Resend API key is not configured. Please add VITE_RESEND_API_KEY to your environment variables.');
-        }
-
-        const response = await fetch('https://api.resend.com/emails', {
+        const response = await fetch('/api/send-email', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${RESEND_API_KEY}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                from: 'onboarding@resend.dev',
                 to: candidateEmail,
                 subject: `Update on your application for ${jobTitle}`,
                 html: `
