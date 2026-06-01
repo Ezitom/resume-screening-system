@@ -826,7 +826,7 @@ async function sendRecruiterInvite() {
       body: JSON.stringify({
         email: email,
         data: { full_name: fullName },
-        redirect_to: window.location.origin + "/set-password.html"
+        redirect_to: 'https://ezitom.vercel.app/set-password.html'
       })
     });
 
