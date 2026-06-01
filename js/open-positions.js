@@ -52,7 +52,7 @@ const ebenOpenPositions = {
             this.renderOpenJobs(openJobs);
 
         } catch (err) {
-            console.error("❌ Failed to load jobs:", err);
+            console.error("[ERROR] Failed to load jobs:", err);
         }
     },
 

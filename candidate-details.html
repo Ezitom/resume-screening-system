@@ -127,7 +127,20 @@
                                 Status</button>
                             <button id="sidebar-send-email-btn" class="eben-btn eben-btn-outline eben-btn-full">Send
                                 Email</button>
-                            <a href="dashboard.html" class="eben-back-link">← Back to Dashboard</a>
+
+                            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                <button id="shortlist-btn" class="eben-btn eben-btn-full" onclick="sendShortlistEmail()" style="background: var(--eben-success); color: #fff; border: none; flex: 1;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                    Shortlist Candidate
+                                </button>
+                                <button id="reject-btn" class="eben-btn eben-btn-full" onclick="sendRejectionEmail()" style="background: var(--eben-danger); color: #fff; border: none; flex: 1;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                    Send Rejection
+                                </button>
+                            </div>
+                            <p id="shortlist-status" style="display:none; font-size: 0.85rem; margin-top: 8px; text-align: center;"></p>
+
+                            <a href="dashboard.html" class="eben-back-link">&larr; Back to Dashboard</a>
                         </div>
                     </div>
                 </aside>
@@ -157,7 +170,7 @@
                         <div id="score-breakdown-container"></div>
                       </div>
                     </div>
-                    <div id="ai-loading-state" style="display:none;"><p>⏳ Analyzing resume, please wait...</p></div>
+                    <div id="ai-loading-state" style="display:none;"><p><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px; animation: eben-spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Analyzing resume, please wait...</p></div>
                     <div id="ai-error-state" style="display:none;"><p id="ai-error-message" style="color:red;"></p></div>
 
                     <div class="eben-card eben-tabs-card">

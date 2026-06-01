@@ -61,7 +61,7 @@ const ebenDashboard = {
 
         try {
             if (!window.supabaseClient) {
-                console.warn("⚠️ window.supabaseClient is not initialized. Using mock candidates fallback.");
+                console.warn("[WARN] window.supabaseClient is not initialized. Using mock candidates fallback.");
                 candidatesData = window.EBEN_MOCK_CANDIDATES || [];
                 usingFallback = true;
             } else {
@@ -71,11 +71,11 @@ const ebenDashboard = {
                     .order("date_applied", { ascending: false });
 
                 if (error) {
-                    console.warn("⚠️ Supabase candidate fetch failed, falling back to mock data:", error);
+                    console.warn("[WARN] Supabase candidate fetch failed, falling back to mock data:", error);
                     candidatesData = window.EBEN_MOCK_CANDIDATES || [];
                     usingFallback = true;
                 } else if (!candidates || candidates.length === 0) {
-                    console.log("ℹ️ No candidates in Supabase. Using mock candidates.");
+                    console.log("[INFO] No candidates in Supabase. Using mock candidates.");
                     candidatesData = window.EBEN_MOCK_CANDIDATES || [];
                     usingFallback = true;
                 } else {
@@ -83,7 +83,7 @@ const ebenDashboard = {
                 }
             }
         } catch (err) {
-            console.error("❌ Failed to query candidates from Supabase:", err);
+            console.error("[ERROR] Failed to query candidates from Supabase:", err);
             candidatesData = window.EBEN_MOCK_CANDIDATES || [];
             usingFallback = true;
         }
@@ -184,7 +184,7 @@ const ebenDashboard = {
                 });
             }
             
-            console.log("✅ Job dropdown populated with", jobs.length, "jobs");
+            console.log("[OK] Job dropdown populated with", jobs.length, "jobs");
         } catch (err) {
             console.error("Unexpected error populating dropdown:", err);
         }
@@ -773,7 +773,38 @@ document.addEventListener('DOMContentLoaded', () => {
     ebenDashboard.init();
 });
 
-// ── INVITE RECRUITER FUNCTIONS ──────────────────────────────
+// ── INVITE PERMISSION CHECK (admin-only) ──────────────────────
+async function checkInvitePermission() {
+    try {
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await window.supabaseClient
+            .from('recruiters')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        if (!profile || profile.role !== 'admin') {
+            // Hide the invite recruiter button
+            const inviteBtn = document.getElementById('invite-recruiter-btn');
+            if (inviteBtn) inviteBtn.style.display = 'none';
+
+            // Also hide the entire invite section if it exists
+            const inviteSection = document.getElementById('invite-section');
+            if (inviteSection) inviteSection.style.display = 'none';
+
+            // Also hide the recruiters list section
+            const recruitersList = document.getElementById('recruiters-list');
+            if (recruitersList) recruitersList.style.display = 'none';
+        }
+    } catch (err) {
+        console.error('[EBEN] Failed to check invite permission:', err);
+    }
+}
+
+// Call permission check on dashboard load
+checkInvitePermission();
 
 function openInviteModal() {
   const modal = document.getElementById("invite-modal");
@@ -795,6 +826,25 @@ document.getElementById("invite-modal").addEventListener("click", (e) => {
 });
 
 async function sendRecruiterInvite() {
+  // Check permission first — only admin can invite
+  try {
+    const { data: { user } } = await window.supabaseClient.auth.getUser();
+    const { data: profile } = await window.supabaseClient
+      .from('recruiters')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || profile.role !== 'admin') {
+      alert('You do not have permission to invite recruiters.');
+      return;
+    }
+  } catch (permErr) {
+    console.error('[EBEN] Permission check failed:', permErr);
+    alert('Unable to verify permissions. Please try again.');
+    return;
+  }
+
   const fullName = document.getElementById("invite-name").value.trim();
   const email = document.getElementById("invite-email").value.trim();
   const sendBtn = document.getElementById("send-invite-btn");
@@ -848,7 +898,7 @@ async function sendRecruiterInvite() {
 
     if (dbError) console.error("DB error:", dbError);
 
-    successEl.textContent = `✅ Invite sent to ${email} successfully! They will receive an email to set their password.`;
+    successEl.textContent = `Invite sent to ${email} successfully! They will receive an email to set their password.`;
     successEl.style.display = "block";
     sendBtn.textContent = "Send Another Invite";
     sendBtn.disabled = false;

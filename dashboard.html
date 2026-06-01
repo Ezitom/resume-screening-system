@@ -44,7 +44,7 @@
                 <a href="analytics.html" class="eben-nav-link">Analytics</a>
             </div>
             <div class="eben-nav-actions">
-                <button onclick="openInviteModal()" style="padding:8px 16px; background:#1a1a2e; color:#fff; border:none; border-radius:8px; font-size:14px; cursor:pointer;">
+                <button id="invite-recruiter-btn" onclick="openInviteModal()" style="padding:8px 16px; background:#1a1a2e; color:#fff; border:none; border-radius:8px; font-size:14px; cursor:pointer;">
                   + Invite Recruiter
                 </button>
                 <span class="eben-nav-user eben-nav__recruiter-name" id="nav-recruiter-name">Recruiter</span>
@@ -202,9 +202,10 @@ Recruitment Team</textarea>
     </div>
 
     <!-- Invite Recruiter Modal -->
+    <div id="invite-section">
     <div id="invite-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--eben-modal-backdrop); z-index:1000; justify-content:center; align-items:center;">
       <div style="background:var(--eben-surface); border:1px solid var(--eben-border); border-radius:12px; padding:2rem; width:90%; max-width:480px; position:relative; box-shadow:var(--eben-shadow);">
-        <button onclick="closeInviteModal()" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:var(--eben-text-secondary);">✕</button>
+        <button onclick="closeInviteModal()" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:var(--eben-text-secondary);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         <h2 style="margin-bottom:8px; font-size:20px; color:var(--eben-text-primary);">Invite Recruiter</h2>
         <p style="color:var(--eben-text-secondary); font-size:14px; margin-bottom:20px;">The recruiter will receive an email with a link to set their password and access the platform.</p>
         <div style="margin-bottom:16px;">
@@ -222,6 +223,7 @@ Recruitment Team</textarea>
         </button>
       </div>
     </div>
+    </div><!-- end invite-section -->
 
 
     <!-- Recruiters List Section -->

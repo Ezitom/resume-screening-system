@@ -39,7 +39,7 @@ const ebenAnalytics = {
             this.initFilters();
 
         } catch (err) {
-            console.error("❌ Failed to initialize analytics:", err);
+            console.error("[ERROR] Failed to initialize analytics:", err);
         }
     },
 

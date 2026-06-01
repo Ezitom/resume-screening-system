@@ -77,7 +77,7 @@ const ebenCandidateDetails = {
 
                 if (error) throw error;
                 candidate = dbCandidate;
-                console.log("✅ Candidate loaded from Supabase:", candidate);
+                console.log("[OK] Candidate loaded from Supabase:", candidate);
 
                 // Fetch real status from applications table
                 const { data: appData } = await window.supabaseClient
@@ -91,9 +91,9 @@ const ebenCandidateDetails = {
                     else if (s.toLowerCase() === 'rejected') realStatus = 'Rejected';
                     else realStatus = 'Pending';
                 }
-                console.log("✅ Candidate status from applications table:", realStatus);
+                console.log("[OK] Candidate status from applications table:", realStatus);
             } catch (dbError) {
-                console.warn("⚠️ Supabase candidate fetch failed, trying mock fallback:", dbError);
+                console.warn("[WARN] Supabase candidate fetch failed, trying mock fallback:", dbError);
                 
                 // Fallback to mock data
                 const mockCand = (typeof EBEN_MOCK_CANDIDATES !== 'undefined') 
@@ -164,7 +164,7 @@ const ebenCandidateDetails = {
             }
 
             if (!candidate) {
-                console.error("❌ Candidate not found in Supabase or local mock storage.");
+                console.error("[ERROR] Candidate not found in Supabase or local mock storage.");
                 return;
             }
 
@@ -284,7 +284,7 @@ const ebenCandidateDetails = {
             this.loadSavedState();
 
         } catch (error) {
-            console.error("❌ Failed to load candidate:", error);
+            console.error("[ERROR] Failed to load candidate:", error);
         }
     },
 
@@ -522,18 +522,18 @@ const ebenCandidateDetails = {
                                 }]);
                             if (insertError) throw insertError;
                         }
-                        console.log('✅ Status saved to Supabase:', selectedStatus);
+                        console.log('[OK] Status saved to Supabase:', selectedStatus);
                     } else {
-                        console.log('ℹ️ Mock candidate status saved to local storage:', selectedStatus);
+                        console.log('[INFO] Mock candidate status saved to local storage:', selectedStatus);
                     }
 
                     // Update local candidateData to keep in sync
                     if (this.candidateData) this.candidateData.status = selectedStatus;
 
-                    saveBtn.textContent = 'Status Saved ✓';
+                    saveBtn.textContent = 'Status Saved';
                     saveBtn.classList.add('eben-btn-success');
                 } catch (err) {
-                    console.error('❌ Failed to save status to Supabase:', err);
+                    console.error('[ERROR] Failed to save status to Supabase:', err);
                     saveBtn.textContent = 'Save Failed!';
                     saveBtn.style.background = 'var(--eben-danger)';
                     saveBtn.style.color = '#fff';
@@ -692,3 +692,165 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.ebenCandidateDetails = ebenCandidateDetails;
+
+// ── SHORTLIST & REJECTION EMAIL FUNCTIONS ──────────────────────
+
+async function sendShortlistEmail() {
+    const shortlistBtn = document.getElementById('shortlist-btn');
+    const statusEl = document.getElementById('shortlist-status');
+
+    // Get candidate details from the current page
+    const candidateName = document.getElementById('sidebar-candidate-name')?.textContent || 'Candidate';
+    const candidateEmail = document.getElementById('sidebar-candidate-email')?.textContent || '';
+    const jobTitle = document.getElementById('sidebar-candidate-job')?.textContent || 'the position';
+
+    if (!candidateEmail || candidateEmail === 'No Email') {
+        statusEl.style.display = 'block';
+        statusEl.style.color = 'var(--eben-danger)';
+        statusEl.textContent = 'No email address found for this candidate.';
+        return;
+    }
+
+    shortlistBtn.disabled = true;
+    shortlistBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px; animation: eben-spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Sending...';
+    statusEl.style.display = 'none';
+
+    try {
+        const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
+
+        if (!RESEND_API_KEY) {
+            throw new Error('Resend API key is not configured. Please add VITE_RESEND_API_KEY to your environment variables.');
+        }
+
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${RESEND_API_KEY}`
+            },
+            body: JSON.stringify({
+                from: 'onboarding@resend.dev',
+                to: candidateEmail,
+                subject: `Congratulations! You have been shortlisted for ${jobTitle}`,
+                html: `
+                    <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; border: 1px solid #E0DAD3; border-radius: 12px;">
+                        <div style="text-align: center; margin-bottom: 24px; border-bottom: 2px solid #C8963E; padding-bottom: 16px;">
+                            <h1 style="color: #1C1C1C; font-size: 20px; margin: 0;">EBEN Recruitment Platform</h1>
+                        </div>
+                        <h2 style="color: #3A7D44; font-size: 22px;">Congratulations, ${candidateName}!</h2>
+                        <p style="color: #1C1C1C; line-height: 1.7;">We are pleased to inform you that after carefully reviewing your application and resume, you have been <strong>shortlisted</strong> for the position of <strong>${jobTitle}</strong>.</p>
+                        <p style="color: #1C1C1C; line-height: 1.7;">Our recruitment team was impressed with your qualifications, experience, and sustainability values. We would like to invite you to the next stage of our recruitment process.</p>
+                        <p style="color: #1C1C1C; line-height: 1.7;">You will receive further details about the next steps shortly. Please ensure your contact details are up to date.</p>
+                        <hr style="border: none; border-top: 1px solid #E0DAD3; margin: 24px 0;">
+                        <p style="color: #1C1C1C; line-height: 1.7;">We look forward to speaking with you soon.</p>
+                        <p style="color: #1C1C1C; line-height: 1.7;"><strong>Best regards,</strong><br>The Recruitment Team</p>
+                        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E0DAD3; font-size: 12px; color: #6B6560; text-align: center;">
+                            This email was sent from the EBEN Recruitment Platform.
+                        </div>
+                    </div>
+                `
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to send email');
+        }
+
+        statusEl.style.display = 'block';
+        statusEl.style.color = 'var(--eben-success)';
+        statusEl.textContent = `Shortlist email sent successfully to ${candidateEmail}`;
+        shortlistBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Email Sent';
+        shortlistBtn.style.background = '#22c55e';
+
+    } catch (err) {
+        console.error('[ERROR] Shortlist email error:', err);
+        statusEl.style.display = 'block';
+        statusEl.style.color = 'var(--eben-danger)';
+        statusEl.textContent = 'Failed to send email: ' + err.message;
+        shortlistBtn.disabled = false;
+        shortlistBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Shortlist Candidate';
+    }
+}
+
+async function sendRejectionEmail() {
+    const rejectBtn = document.getElementById('reject-btn');
+    const statusEl = document.getElementById('shortlist-status');
+
+    const candidateName = document.getElementById('sidebar-candidate-name')?.textContent || 'Candidate';
+    const candidateEmail = document.getElementById('sidebar-candidate-email')?.textContent || '';
+    const jobTitle = document.getElementById('sidebar-candidate-job')?.textContent || 'the position';
+
+    if (!candidateEmail || candidateEmail === 'No Email') {
+        statusEl.style.display = 'block';
+        statusEl.style.color = 'var(--eben-danger)';
+        statusEl.textContent = 'No email address found for this candidate.';
+        return;
+    }
+
+    rejectBtn.disabled = true;
+    rejectBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px; animation: eben-spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Sending...';
+    statusEl.style.display = 'none';
+
+    try {
+        const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
+
+        if (!RESEND_API_KEY) {
+            throw new Error('Resend API key is not configured. Please add VITE_RESEND_API_KEY to your environment variables.');
+        }
+
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${RESEND_API_KEY}`
+            },
+            body: JSON.stringify({
+                from: 'onboarding@resend.dev',
+                to: candidateEmail,
+                subject: `Update on your application for ${jobTitle}`,
+                html: `
+                    <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; border: 1px solid #E0DAD3; border-radius: 12px;">
+                        <div style="text-align: center; margin-bottom: 24px; border-bottom: 2px solid #C8963E; padding-bottom: 16px;">
+                            <h1 style="color: #1C1C1C; font-size: 20px; margin: 0;">EBEN Recruitment Platform</h1>
+                        </div>
+                        <h2 style="color: #1C1C1C; font-size: 22px;">Thank you for your application, ${candidateName}</h2>
+                        <p style="color: #1C1C1C; line-height: 1.7;">We appreciate the time and effort you put into applying for the position of <strong>${jobTitle}</strong> and for sharing your experience and sustainability values with us.</p>
+                        <p style="color: #1C1C1C; line-height: 1.7;">After careful consideration, we regret to inform you that we will not be moving forward with your application at this time. This was a difficult decision as we received many strong applications.</p>
+                        <p style="color: #1C1C1C; line-height: 1.7;">We encourage you to apply for future opportunities with us and wish you the very best in your career journey.</p>
+                        <hr style="border: none; border-top: 1px solid #E0DAD3; margin: 24px 0;">
+                        <p style="color: #1C1C1C; line-height: 1.7;">Thank you again for your interest.</p>
+                        <p style="color: #1C1C1C; line-height: 1.7;"><strong>Best regards,</strong><br>The Recruitment Team</p>
+                        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E0DAD3; font-size: 12px; color: #6B6560; text-align: center;">
+                            This email was sent from the EBEN Recruitment Platform.
+                        </div>
+                    </div>
+                `
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to send email');
+        }
+
+        statusEl.style.display = 'block';
+        statusEl.style.color = 'var(--eben-warning)';
+        statusEl.textContent = `Rejection email sent to ${candidateEmail}`;
+        rejectBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Email Sent';
+
+    } catch (err) {
+        console.error('[ERROR] Rejection email error:', err);
+        statusEl.style.display = 'block';
+        statusEl.style.color = 'var(--eben-danger)';
+        statusEl.textContent = 'Failed to send email: ' + err.message;
+        rejectBtn.disabled = false;
+        rejectBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Send Rejection';
+    }
+}
+
+// Expose functions globally
+window.sendShortlistEmail = sendShortlistEmail;
+window.sendRejectionEmail = sendRejectionEmail;

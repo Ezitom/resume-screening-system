@@ -83,7 +83,7 @@ const ebenJobPostings = {
                 .order("created_at", { ascending: false });
 
             if (error) throw error;
-            console.log("✅ Jobs loaded from Supabase:", jobs);
+            console.log("[OK] Jobs loaded from Supabase:", jobs);
 
             const { data: candidates, error: candError } = await window.supabaseClient
                 .from("candidates")
@@ -112,7 +112,7 @@ const ebenJobPostings = {
             this.renderJobs(mappedJobs);
 
         } catch (error) {
-            console.error("❌ Failed to load jobs:", error);
+            console.error("[ERROR] Failed to load jobs:", error);
         }
     },
     
@@ -150,13 +150,13 @@ getJobs() {
                 }]);
                 
             if (error) throw error;
-            console.log("✅ Job created in Supabase");
+            console.log("[OK] Job created in Supabase");
             
             this.toggleModal(false);
             document.getElementById('new-posting-form').reset();
             this.loadJobsFromSupabase();
         } catch (error) {
-            console.error("❌ Failed to create job:", error);
+            console.error("[ERROR] Failed to create job:", error);
             alert("Supabase Error: " + (error.message || JSON.stringify(error)));
         }
     },
@@ -240,7 +240,7 @@ getJobs() {
             if (error) throw error;
             this.loadJobsFromSupabase();
         } catch (error) {
-            console.error("❌ Failed to update job status:", error);
+            console.error("[ERROR] Failed to update job status:", error);
         }
     },
 
@@ -255,7 +255,7 @@ getJobs() {
                 if (error) throw error;
                 this.loadJobsFromSupabase();
             } catch (error) {
-                console.error("❌ Failed to delete job:", error);
+                console.error("[ERROR] Failed to delete job:", error);
             }
         }
     },

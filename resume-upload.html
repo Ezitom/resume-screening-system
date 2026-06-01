@@ -86,7 +86,7 @@
                 placeholder="e.g. I volunteered with a local environmental NGO where I helped organise community clean-up drives. Professionally, I championed a green IT initiative at my last company that reduced server energy consumption by 30%..."
                 style="resize: vertical; min-height: 120px; font-family: var(--font-body); font-size: 0.9rem; line-height: 1.6;"></textarea>
               <span id="sustainability-error" class="eben-field-error"
-                style="display:none; color: var(--eben-danger); font-size: 0.8rem; margin-top: 6px;">⚠ Please describe
+                style="display:none; color: var(--eben-danger); font-size: 0.8rem; margin-top: 6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Please describe
                 your sustainability values (minimum 50 characters required).</span>
               <p id="sustainability-char-count"
                 style="font-size: 0.75rem; color: var(--eben-text-secondary); text-align: right; margin: 4px 0 0;">0 /
@@ -131,10 +131,10 @@
             <button type="button" class="eben-btn eben-btn-primary eben-btn-full" id="ebenSubmitBtnNew"
               style="margin-top: 24px;">Submit Application</button>
             
-            <div id="upload-status" style="display:none; margin-top:16px; color:#6b7280; text-align:center;">⏳ Analyzing
+            <div id="upload-status" style="display:none; margin-top:16px; color:#6b7280; text-align:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px; animation: eben-spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Analyzing
               resume...</div>
             <div id="upload-error" style="display:none; margin-top:16px; color:#ef4444; text-align:center;"></div>
-            <div id="upload-success" style="display:none; margin-top:16px; color:#22c55e; text-align:center;">✅ Resume
+            <div id="upload-success" style="display:none; margin-top:16px; color:#22c55e; text-align:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Resume
               analyzed successfully!</div>
 
             <div id="ebenSuccessState" style="display: none;">
@@ -250,7 +250,7 @@
         return candidate.id;
 
       } catch (error) {
-        console.error("❌ Supabase save error:", error);
+        console.error("[ERROR] Supabase save error:", error);
         throw new Error("Failed to save candidate: " + error.message);
       }
     }
