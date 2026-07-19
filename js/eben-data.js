@@ -1,4 +1,4 @@
-/* eben-data.js — shared mock data */
+/* eben-data.js - shared mock data */
 const EBEN_MOCK_CANDIDATES = [
   { 
     id: 'cand-ebenezer-tomiwa-oni', 

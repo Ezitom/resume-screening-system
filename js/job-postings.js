@@ -1,4 +1,5 @@
 /* job-postings.js */
+import { API_BASE_URL } from './config.js';
 
 const ebenJobPostings = {
     defaultJobs: [
@@ -72,6 +73,33 @@ const ebenJobPostings = {
                 localStorage.setItem('eben-active-job-filter', jobTitle);
             }
         });
+
+        // Initialize Message Applicants Modal
+        const messageModal = document.getElementById('message-applicants-modal');
+        const messageCancelBtn = document.getElementById('message-modal-cancel');
+        const messageForm = document.getElementById('message-applicants-form');
+
+        if (messageCancelBtn) {
+            messageCancelBtn.addEventListener('click', () => this.toggleMessageModal(false));
+        }
+
+        if (messageModal) {
+            messageModal.addEventListener('click', (e) => {
+                if (e.target === messageModal) this.toggleMessageModal(false);
+            });
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && messageModal.classList.contains('active')) {
+                    this.toggleMessageModal(false);
+                }
+            });
+        }
+
+        if (messageForm) {
+            messageForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleSendMessage();
+            });
+        }
     },
 
     
@@ -200,6 +228,13 @@ getJobs() {
                                 </svg>
                                 Set Closed
                             </button>
+                            <button class="eben-job-card__menu-item" onclick="ebenJobPostings.toggleMessageModal(true, '${job.title}')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                    <polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                                Message Applicants
+                            </button>
                             <button class="eben-job-card__menu-item eben-job-card__menu-item--delete" onclick="ebenJobPostings.deleteJob('${job.title}')">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <polyline points="3 6 5 6 21 6"/>
@@ -220,7 +255,7 @@ getJobs() {
                 </div>
                 <div class="eben-job-card-footer">
                     <span class="eben-badge eben-badge-${job.status === 'Open' ? 'success' : 'danger'}">${job.status}</span>
-                    <a href="dashboard.html" class="eben-btn eben-btn-outline view-applicants" data-job-title="${job.title}">View Applicants</a>
+                    <a href="/dashboard" class="eben-btn eben-btn-outline view-applicants" data-job-title="${job.title}">View Applicants</a>
                 </div>
             `;
             grid.appendChild(card);
@@ -305,6 +340,79 @@ getJobs() {
             return false;
         }
         return true;
+    },
+
+    toggleMessageModal(isOpen, jobTitle = '') {
+        const modal = document.getElementById('message-applicants-modal');
+        if (!modal) return;
+        
+        if (isOpen) {
+            document.getElementById('message-job-title').textContent = jobTitle;
+            document.getElementById('message-text').value = '';
+            const statusEl = document.getElementById('message-status');
+            if (statusEl) statusEl.style.display = 'none';
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        } else {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    },
+
+    async handleSendMessage() {
+        const jobTitle = document.getElementById('message-job-title').textContent;
+        const messageText = document.getElementById('message-text').value.trim();
+        const submitBtn = document.getElementById('message-submit-btn');
+        const statusEl = document.getElementById('message-status');
+
+        if (!jobTitle || !messageText) return;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+        statusEl.style.display = 'block';
+        statusEl.style.color = 'var(--eben-text-secondary)';
+        statusEl.textContent = 'Broadcasting message to all applicants...';
+
+        try {
+            const response = await fetch(API_BASE_URL + '/api/job-posting-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    job_title: jobTitle,
+                    message: messageText,
+                    company_name: 'EBEN Recruitment'
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Failed to send message');
+            }
+
+            const successCount = result.success_count || 0;
+            const failureCount = result.failure_count || 0;
+
+            if (failureCount > 0) {
+                statusEl.style.color = 'var(--eben-warning)';
+                statusEl.textContent = `Completed with warnings: Sent to ${successCount} candidates, failed for ${failureCount}.`;
+            } else {
+                statusEl.style.color = 'var(--eben-success)';
+                statusEl.textContent = `Success! Message broadcasted to all ${successCount} applicant(s).`;
+                setTimeout(() => {
+                    this.toggleMessageModal(false);
+                }, 2000);
+            }
+        } catch (err) {
+            console.error('[ERROR] Broadcast failed:', err);
+            statusEl.style.color = 'var(--eben-danger)';
+            statusEl.textContent = 'Failed to broadcast message: ' + err.message;
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Send Message';
+        }
     }
 };
 

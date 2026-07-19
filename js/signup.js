@@ -97,12 +97,12 @@ document.getElementById('signupBtn').addEventListener('click', function() {
     return;
   }
 
-  // Save account — hash password minimally for frontend (NOT production-secure)
+  // Save account - hash password minimally for frontend (NOT production-secure)
   const newAccount = {
     id: 'recruiter-' + Date.now(),
     name: name,
     email: email,
-    passwordHash: btoa(password), // base64 encode — frontend only, not production secure
+    passwordHash: btoa(password), // base64 encode - frontend only, not production secure
     createdAt: new Date().toISOString()
   };
 
@@ -122,7 +122,7 @@ document.getElementById('signupBtn').addEventListener('click', function() {
       email: newAccount.email,
       loggedIn: true
     }));
-    window.location.href = 'dashboard.html';
+    window.location.href = '/dashboard';
   }, 1000);
 });
 

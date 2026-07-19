@@ -7,7 +7,7 @@ const ebenAnalytics = {
     charts: {},
 
     async init() {
-        console.log("Analytics init — Supabase client:", typeof window.supabaseClient);
+        console.log("Analytics init - Supabase client:", typeof window.supabaseClient);
         try {
             const [{ data: candidates, error: cError }, { data: jobs, error: jError }, { data: applications, error: aError }] = await Promise.all([
                 window.supabaseClient.from("candidates").select("*"),

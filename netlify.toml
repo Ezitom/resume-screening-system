@@ -1,0 +1,77 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# =========================================================================
+# Netlify Redirects/Rewrites for Clean, Extension-less URLs
+# =========================================================================
+
+[[redirects]]
+  from = "/candidate-details"
+  to = "/candidate-details.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms-of-use"
+  to = "/terms-of-use.html"
+  status = 200
+
+[[redirects]]
+  from = "/support"
+  to = "/support.html"
+  status = 200
+
+[[redirects]]
+  from = "/signup"
+  to = "/signup.html"
+  status = 200
+
+[[redirects]]
+  from = "/set-password"
+  to = "/set-password.html"
+  status = 200
+
+[[redirects]]
+  from = "/privacy-policy"
+  to = "/privacy-policy.html"
+  status = 200
+
+[[redirects]]
+  from = "/reset-password"
+  to = "/reset-password.html"
+  status = 200
+
+[[redirects]]
+  from = "/open-positions"
+  to = "/open-positions.html"
+  status = 200
+
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/job-postings"
+  to = "/job-postings.html"
+  status = 200
+
+[[redirects]]
+  from = "/resume-upload"
+  to = "/resume-upload.html"
+  status = 200
+
+[[redirects]]
+  from = "/forgot-password"
+  to = "/forgot-password.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/analytics"
+  to = "/analytics.html"
+  status = 200

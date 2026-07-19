@@ -1,0 +1,225 @@
+# app.py
+import os
+import logging
+from dotenv import load_dotenv
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+# Load local environment variables (if .env exists)
+load_dotenv()
+import requests
+from supabase import create_client, Client
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
+
+# Configure CORS: Allow local development and the custom Netlify domain (read from ALLOWED_ORIGIN env var)
+allowed_origin = os.environ.get('ALLOWED_ORIGIN', 'https://ezitom.netlify.app')
+CORS(app, resources={r"/api/*": {"origins": [
+    allowed_origin,
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+]}})
+
+# Initialize Supabase Client
+supabase_url = os.environ.get("SUPABASE_URL")
+supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
+supabase: Client = None
+
+if supabase_url and supabase_key:
+    try:
+        supabase = create_client(supabase_url, supabase_key)
+        logger.info("Supabase client initialized successfully.")
+    except Exception as e:
+        logger.error(f"Failed to initialize Supabase client: {e}")
+else:
+    logger.warning("Supabase environment variables are missing!")
+
+# Brevo configuration
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
+BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL") or os.environ.get("SENDER_EMAIL")
+SENDER_NAME = os.environ.get("SENDER_NAME", "EBEN Recruitment")
+
+def send_brevo_email(to_email, to_name, subject, html_content):
+    if not BREVO_API_KEY:
+        raise ValueError("BREVO_API_KEY is not configured on the server.")
+    if not BREVO_SENDER_EMAIL:
+        raise ValueError("BREVO_SENDER_EMAIL is not configured on the server.")
+    
+    headers = {
+        "accept": "application/json",
+        "api-key": BREVO_API_KEY,
+        "content-type": "application/json"
+    }
+    
+    payload = {
+        "sender": {"name": SENDER_NAME, "email": BREVO_SENDER_EMAIL},
+        "to": [{"email": to_email, "name": to_name}],
+        "subject": subject,
+        "htmlContent": html_content
+    }
+    
+    response = requests.post(
+        "https://api.brevo.com/v3/smtp/email",
+        json=payload,
+        headers=headers
+    )
+    
+    if response.status_code not in [200, 201, 202]:
+        logger.error(f"Brevo API error: {response.status_code} - {response.text}")
+        raise RuntimeError(f"Brevo API error: {response.text}")
+        
+    return response.json()
+
+@app.route('/api/send-email', methods=['POST'])
+def send_email():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"message": "Missing JSON request body"}), 400
+            
+        to_email = data.get("to")
+        subject = data.get("subject")
+        html_content = data.get("html")
+        to_name = data.get("to_name", "Candidate")
+        
+        if not to_email or not subject or not html_content:
+            return jsonify({"message": "Missing required fields (to, subject, html)"}), 400
+            
+        res = send_brevo_email(to_email, to_name, subject, html_content)
+        return jsonify(res), 200
+    except Exception as e:
+        logger.exception("Error sending email")
+        return jsonify({"message": str(e)}), 500
+
+@app.route('/api/job-posting-email', methods=['POST'])
+@app.route('/api/jobs/message-applicants', methods=['POST'])
+def message_applicants():
+    # Trigger A: send message to all applicants of a job
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"message": "Missing JSON request body"}), 400
+            
+        job_title = data.get("job_title")
+        message_content = data.get("message")
+        company_name = data.get("company_name", "EBEN Recruitment")
+        
+        if not job_title or not message_content:
+            return jsonify({"message": "Missing required fields (job_title, message)"}), 400
+            
+        if not supabase:
+            return jsonify({"message": "Supabase client not initialized on server"}), 500
+            
+        # Fetch candidates for this job title
+        query_response = supabase.table("candidates").select("id, name, email").eq("job_title", job_title).execute()
+        candidates = query_response.data
+        
+        if not candidates:
+            return jsonify({
+                "message": f"No applicants found for job title '{job_title}'",
+                "success_count": 0,
+                "failure_count": 0,
+                "results": []
+            }), 200
+            
+        success_count = 0
+        failure_count = 0
+        results = []
+        
+        for cand in candidates:
+            cand_name = cand.get("name", "Candidate")
+            cand_email = cand.get("email")
+            
+            if not cand_email:
+                logger.warning(f"Candidate {cand_name} (ID: {cand.get('id')}) has no email.")
+                failure_count += 1
+                results.append({"email": None, "name": cand_name, "status": "failed", "error": "No email address"})
+                continue
+                
+            subject = f"Update regarding your application for {job_title}"
+            html_content = f"""
+                <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; border: 1px solid #E0DAD3; border-radius: 12px; background-color: #ffffff;">
+                    <div style="text-align: center; margin-bottom: 24px; border-bottom: 2px solid #C8963E; padding-bottom: 16px;">
+                        <h1 style="color: #1C1C1C; font-size: 20px; margin: 0;">{company_name}</h1>
+                    </div>
+                    <h2 style="color: #1C1C1C; font-size: 22px;">Hello {cand_name},</h2>
+                    <p style="color: #1C1C1C; line-height: 1.7; white-space: pre-wrap;">{message_content}</p>
+                    <hr style="border: none; border-top: 1px solid #E0DAD3; margin: 24px 0;">
+                    <p style="color: #1C1C1C; line-height: 1.7;"><strong>Best regards,</strong><br>The Recruitment Team</p>
+                    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E0DAD3; font-size: 12px; color: #6B6560; text-align: center;">
+                        This email was sent from the EBEN Recruitment Platform.
+                    </div>
+                </div>
+            """
+            
+            try:
+                send_brevo_email(cand_email, cand_name, subject, html_content)
+                success_count += 1
+                results.append({"email": cand_email, "name": cand_name, "status": "success"})
+            except Exception as ex:
+                logger.error(f"Failed to send email to {cand_email}: {ex}")
+                failure_count += 1
+                results.append({"email": cand_email, "name": cand_name, "status": "failed", "error": str(ex)})
+                
+        return jsonify({
+            "message": f"Processed {len(candidates)} candidates.",
+            "success_count": success_count,
+            "failure_count": failure_count,
+            "results": results
+        }), 200
+        
+    except Exception as e:
+        logger.exception("Error messaging applicants")
+        return jsonify({"message": str(e)}), 500
+
+@app.route('/api/interview-invite', methods=['POST'])
+@app.route('/api/candidates/invite-interview', methods=['POST'])
+def invite_interview():
+    # Trigger B: send individual interview invite
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"message": "Missing JSON request body"}), 400
+            
+        candidate_name = data.get("candidate_name")
+        candidate_email = data.get("candidate_email")
+        job_title = data.get("job_title")
+        company_name = data.get("company_name", "EBEN Recruitment")
+        
+        if not candidate_name or not candidate_email or not job_title:
+            return jsonify({"message": "Missing required fields (candidate_name, candidate_email, job_title)"}), 400
+            
+        subject = f"Interview Invitation: {job_title} at {company_name}"
+        html_content = f"""
+            <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; border: 1px solid #E0DAD3; border-radius: 12px; background-color: #ffffff;">
+                <div style="text-align: center; margin-bottom: 24px; border-bottom: 2px solid #C8963E; padding-bottom: 16px;">
+                    <h1 style="color: #1C1C1C; font-size: 20px; margin: 0;">{company_name}</h1>
+                </div>
+                <h2 style="color: #3A7D44; font-size: 22px;">Hello {candidate_name},</h2>
+                <p style="color: #1C1C1C; line-height: 1.7;">We are pleased to invite you for an interview for the <strong>{job_title}</strong> role.</p>
+                <p style="color: #1C1C1C; line-height: 1.7;">Our team was impressed by your profile, and we would love to discuss how your skills and experience align with our requirements.</p>
+                <p style="color: #1C1C1C; line-height: 1.7;">We will follow up shortly with a scheduling link to choose a convenient time. If you have any immediate questions, please feel free to reply to this email.</p>
+                <hr style="border: none; border-top: 1px solid #E0DAD3; margin: 24px 0;">
+                <p style="color: #1C1C1C; line-height: 1.7;"><strong>Best regards,</strong><br>The Recruitment Team</p>
+                <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E0DAD3; font-size: 12px; color: #6B6560; text-align: center;">
+                    This email was sent from the EBEN Recruitment Platform.
+                </div>
+            </div>
+        """
+        
+        res = send_brevo_email(candidate_email, candidate_name, subject, html_content)
+        return jsonify({"message": "Interview invite sent successfully", "response": res}), 200
+        
+    except Exception as e:
+        logger.exception("Error sending interview invite")
+        return jsonify({"message": str(e)}), 500
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)

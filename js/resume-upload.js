@@ -42,7 +42,7 @@ function ebenInitUploadZone() {
     fileInput.click();
   });
 
-  // File input change — primary file selection handler
+  // File input change - primary file selection handler
   fileInput.addEventListener('change', function() {
     const file = this.files && this.files[0];
     if (file) {
@@ -137,7 +137,7 @@ async function ebenSafeExtractDocx(file) {
   }
 }
 
-// PDF extraction — always returns a string, never throws
+// PDF extraction - always returns a string, never throws
 async function ebenSafeExtractPdf(file) {
   try {
     if (typeof pdfjsLib === 'undefined') {
@@ -346,7 +346,7 @@ function ebenShowSuccess() {
 
 function ebenGenerateScoreBreakdown(text) {
   if (!text || text.length < 50) {
-    const errorRes = { score: 0, reason: "Unable to score — resume content could not be read. Please upload a text-based PDF or Word document." };
+    const errorRes = { score: 0, reason: "Unable to score - resume content could not be read. Please upload a text-based PDF or Word document." };
     return {
       skillsMatch: errorRes, 
       experienceLevel: errorRes, 

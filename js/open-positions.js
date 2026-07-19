@@ -84,7 +84,7 @@ const ebenOpenPositions = {
                 </div>
                 <div class="eben-job-card-footer">
                     <span class="eben-badge eben-badge-success">Open</span>
-                    <a href="resume-upload.html?job=${encodeURIComponent(job.title)}&jobId=${job.id}" class="eben-btn eben-btn-primary">Apply Now</a>
+                    <a href="/resume-upload?job=${encodeURIComponent(job.title)}&jobId=${job.id}" class="eben-btn eben-btn-primary">Apply Now</a>
                 </div>
             `;
             grid.appendChild(card);

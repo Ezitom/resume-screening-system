@@ -1,0 +1,9 @@
+@echo off
+echo Adding files to Git...
+git add .
+echo Committing changes...
+git commit -m "Configure Python version for Render deployment and finalize clean URLs and Brevo integration"
+echo Pushing to remote repository...
+git push
+echo Done!
+pause

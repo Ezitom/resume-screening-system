@@ -159,15 +159,15 @@ const ebenDashboard = {
         if (!dropdown) return;
 
         try {
-            console.log("LOG A — Loading jobs for dropdown...");
+            console.log("LOG A - Loading jobs for dropdown...");
             const { data: jobs, error } = await window.supabaseClient
                 .from("jobs")
                 .select("id, title, status")
                 .order("created_at", { ascending: false });
 
-            console.log("LOG B — Jobs for dropdown:", jobs);
+            console.log("LOG B - Jobs for dropdown:", jobs);
             if (error) {
-                console.error("LOG C — Jobs error:", error);
+                console.error("LOG C - Jobs error:", error);
                 return;
             }
 
@@ -275,7 +275,7 @@ const ebenDashboard = {
                                 </svg>
                             </button>
                             <div class="eben-dropdown-menu" id="dropdown-${c.id}">
-                                <a href="candidate-details.html?id=${c.id}" class="eben-dropdown-item" onclick="localStorage.setItem('eben-selected-candidate', '${c.id}')">
+                                <a href="/candidate-details?id=${c.id}" class="eben-dropdown-item" onclick="localStorage.setItem('eben-selected-candidate', '${c.id}')">
                                     <svg class="eben-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                     View Details
                                 </a>
@@ -826,7 +826,7 @@ document.getElementById("invite-modal").addEventListener("click", (e) => {
 });
 
 async function sendRecruiterInvite() {
-  // Check permission first — only admin can invite
+  // Check permission first - only admin can invite
   try {
     const { data: { user } } = await window.supabaseClient.auth.getUser();
     const { data: profile } = await window.supabaseClient
@@ -876,7 +876,7 @@ async function sendRecruiterInvite() {
       body: JSON.stringify({
         email: email,
         data: { full_name: fullName },
-        redirect_to: 'https://ezitom.vercel.app/set-password.html'
+        redirect_to: `${window.location.origin}/set-password`
       })
     });
 
