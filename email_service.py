@@ -199,9 +199,74 @@ def send_application_received_email(candidate_email, candidate_name, job_title):
     return send_application_confirmation_email(candidate_email, candidate_name, job_title)
 
 
+def send_shortlist_email(candidate_email, candidate_name, job_title, custom_message=None):
+    """
+    Sends a shortlist notification email to a candidate via Brevo's SMTP relay / API.
+    Returns True if sent successfully, False otherwise.
+    """
+    display_name = candidate_name if candidate_name else "Candidate"
+    comp_job = job_title if job_title else "the position"
+    subject = f"Congratulations! You have been shortlisted for {comp_job}"
+
+    if custom_message and custom_message.strip():
+        body_html = f'<p style="color: #333333; line-height: 1.6; white-space: pre-wrap;">{custom_message.strip()}</p>'
+    else:
+        body_html = f"""
+        <p style="color: #333333; line-height: 1.6;">We are pleased to inform you that after reviewing your application and resume, you have been <strong>shortlisted</strong> for the position of <strong>{comp_job}</strong>.</p>
+        <p style="color: #333333; line-height: 1.6;">Our recruitment team was impressed with your qualifications and experience. We would like to invite you to the next stage of our process.</p>
+        <p style="color: #333333; line-height: 1.6;">You will receive further details regarding next steps shortly.</p>
+        """
+
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #E0DAD3; border-radius: 8px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #C8963E; padding-bottom: 12px;">
+            <h1 style="color: #1C1C1C; font-size: 20px; margin: 0;">EBEN Recruitment Platform</h1>
+        </div>
+        <h2 style="color: #3A7D44;">Congratulations, {display_name}!</h2>
+        {body_html}
+        <hr style="border: none; border-top: 1px solid #E0DAD3; margin: 24px 0;">
+        <p style="color: #6B6560; font-size: 14px;"><strong>Best regards,</strong><br>The Recruitment Team</p>
+    </div>
+    """
+    return _send_smtp_email(candidate_email, display_name, subject, html_content)
+
+
+def send_rejection_email(candidate_email, candidate_name, job_title, custom_message=None):
+    """
+    Sends a rejection notification email to a candidate via Brevo's SMTP relay / API.
+    Returns True if sent successfully, False otherwise.
+    """
+    display_name = candidate_name if candidate_name else "Candidate"
+    comp_job = job_title if job_title else "the position"
+    subject = f"Update regarding your application for {comp_job}"
+
+    if custom_message and custom_message.strip():
+        body_html = f'<p style="color: #333333; line-height: 1.6; white-space: pre-wrap;">{custom_message.strip()}</p>'
+    else:
+        body_html = f"""
+        <p style="color: #333333; line-height: 1.6;">Thank you for your interest in the position of <strong>{comp_job}</strong>.</p>
+        <p style="color: #333333; line-height: 1.6;">After careful consideration of all applications, we regret to inform you that we will not be moving forward with your application at this time.</p>
+        <p style="color: #333333; line-height: 1.6;">We appreciate the time you took to apply and wish you all the best in your career search.</p>
+        """
+
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #E0DAD3; border-radius: 8px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #C8963E; padding-bottom: 12px;">
+            <h1 style="color: #1C1C1C; font-size: 20px; margin: 0;">EBEN Recruitment Platform</h1>
+        </div>
+        <h2 style="color: #1C1C1C;">Hello {display_name},</h2>
+        {body_html}
+        <hr style="border: none; border-top: 1px solid #E0DAD3; margin: 24px 0;">
+        <p style="color: #6B6560; font-size: 14px;"><strong>Best regards,</strong><br>The Recruitment Team</p>
+    </div>
+    """
+    return _send_smtp_email(candidate_email, display_name, subject, html_content)
+
+
 def send_custom_html_email(to_email, to_name, subject, html_content):
     """
     Sends a custom HTML email via Brevo SMTP relay / API.
     Returns True if sent successfully, False otherwise.
     """
     return _send_smtp_email(to_email, to_name, subject, html_content)
+

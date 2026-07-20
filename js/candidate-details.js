@@ -660,30 +660,79 @@ const ebenCandidateDetails = {
         document.body.style.overflow = '';
     },
 
-    handleSendEmail() {
+    async handleSendEmail() {
         const modal = document.getElementById('candidate-email-modal');
-        const sendBtn = modal.querySelector('button[type="submit"]');
+        const sendBtn = modal?.querySelector('button[type="submit"]');
+        const email = document.getElementById('email-to')?.value || this.candidateData?.email || '';
+        const subject = document.getElementById('email-subject')?.value || 'Re: Your Application';
+        const message = document.getElementById('email-body')?.value || '';
+        const candidateName = this.candidateData?.name || 'Candidate';
 
-        sendBtn.disabled = true;
-        sendBtn.textContent = 'Sending...';
+        if (!email) {
+            alert('No candidate email address found.');
+            return;
+        }
 
-        setTimeout(() => {
-            // Save sent state
-            const sentEmails = JSON.parse(localStorage.getItem('eben-email-sent') || '{}');
-            const email = this.candidateData ? this.candidateData.email : '';
-            if (email) {
-                sentEmails[email] = true;
-                localStorage.setItem('eben-email-sent', JSON.stringify(sentEmails));
+        if (sendBtn) {
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+        }
+
+        try {
+            const backendUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL)
+                ? import.meta.env.VITE_BACKEND_URL
+                : (window.__VITE_BACKEND_URL__ || 'https://resume-screening-system-e5qq.onrender.com');
+
+            const response = await fetch(`${backendUrl}/api/send-email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: email,
+                    to_name: candidateName,
+                    subject: subject,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #E0DAD3; border-radius: 8px; background-color: #ffffff;">
+                            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #C8963E; padding-bottom: 12px;">
+                                <h1 style="color: #1C1C1C; font-size: 20px; margin: 0;">EBEN Recruitment Platform</h1>
+                            </div>
+                            <p style="color: #333333; line-height: 1.6; white-space: pre-wrap;">${message || 'Thank you for your application.'}</p>
+                            <hr style="border: none; border-top: 1px solid #E0DAD3; margin: 24px 0;">
+                            <p style="color: #6B6560; font-size: 14px;"><strong>Best regards,</strong><br>The Recruitment Team</p>
+                        </div>
+                    `
+                })
+            });
+
+            const resData = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(resData.message || 'Failed to send email');
             }
 
-            // Show success
+            // Save sent state only after verified server success
+            const sentEmails = JSON.parse(localStorage.getItem('eben-email-sent') || '{}');
+            sentEmails[email] = true;
+            localStorage.setItem('eben-email-sent', JSON.stringify(sentEmails));
+
+            // Show success UI
             const formContent = document.getElementById('candidate-email-form');
             const successContent = document.getElementById('candidate-email-success');
+            const successEmail = document.getElementById('success-email');
+
             if (formContent) formContent.style.display = 'none';
+            if (successEmail) successEmail.textContent = email;
             if (successContent) successContent.style.display = 'block';
 
             this.showSentIndicator();
-        }, 1500);
+        } catch (err) {
+            console.error('[ERROR] Candidate email send failed:', err);
+            alert('Failed to send email: ' + err.message);
+        } finally {
+            if (sendBtn) {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send Email';
+            }
+        }
     }
 };
 

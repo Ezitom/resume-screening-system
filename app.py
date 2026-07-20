@@ -12,7 +12,9 @@ from email_service import (
     send_job_message_email,
     send_interview_invite_email,
     send_application_confirmation_email,
-    send_custom_html_email
+    send_custom_html_email,
+    send_shortlist_email,
+    send_rejection_email
 )
 
 # Configure logging
@@ -199,6 +201,53 @@ def application_received():
     except Exception as e:
         logger.exception("Error sending application confirmation email")
         return jsonify({"message": str(e)}), 500
+
+
+@app.route('/api/shortlist-email', methods=['POST'])
+@app.route('/api/candidates/shortlist', methods=['POST'])
+def shortlist_candidate():
+    try:
+        data = request.get_json() or {}
+        candidate_email = data.get("candidate_email") or data.get("to")
+        candidate_name = data.get("candidate_name") or data.get("to_name")
+        job_title = data.get("job_title", "Position")
+        custom_message = data.get("message") or data.get("custom_message")
+        
+        if not candidate_email:
+            return jsonify({"message": "Missing candidate_email"}), 400
+            
+        success = send_shortlist_email(candidate_email, candidate_name, job_title, custom_message)
+        if success:
+            return jsonify({"message": "Shortlist email sent successfully"}), 200
+        logger.error(f"Failed to send shortlist email to {candidate_email}")
+        return jsonify({"message": "Failed to send shortlist email via Brevo SMTP. Check server logs."}), 500
+    except Exception as e:
+        logger.exception("Error in shortlist candidate endpoint")
+        return jsonify({"message": str(e)}), 500
+
+
+@app.route('/api/rejection-email', methods=['POST'])
+@app.route('/api/candidates/reject', methods=['POST'])
+def reject_candidate():
+    try:
+        data = request.get_json() or {}
+        candidate_email = data.get("candidate_email") or data.get("to")
+        candidate_name = data.get("candidate_name") or data.get("to_name")
+        job_title = data.get("job_title", "Position")
+        custom_message = data.get("message") or data.get("custom_message")
+        
+        if not candidate_email:
+            return jsonify({"message": "Missing candidate_email"}), 400
+            
+        success = send_rejection_email(candidate_email, candidate_name, job_title, custom_message)
+        if success:
+            return jsonify({"message": "Rejection email sent successfully"}), 200
+        logger.error(f"Failed to send rejection email to {candidate_email}")
+        return jsonify({"message": "Failed to send rejection email via Brevo SMTP. Check server logs."}), 500
+    except Exception as e:
+        logger.exception("Error in reject candidate endpoint")
+        return jsonify({"message": str(e)}), 500
+
 
 
 if __name__ == '__main__':

@@ -536,7 +536,7 @@ const ebenDashboard = {
         const sendBtn = modal.querySelector('button[type="submit"]');
         const email = document.getElementById('email-to')?.value || '';
         const subject = document.getElementById('email-subject')?.value || 'Regarding your application for EBEN Recruitment';
-        const message = document.getElementById('email-message')?.value || '';
+        const message = document.getElementById('email-body')?.value || '';
 
         if (!email) return;
 
