@@ -315,7 +315,26 @@
 
         await saveCandidateToSupabase(candidateRecord, evaluation);
 
+        // Send application confirmation email to candidate
+        try {
+          const backendUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL)
+            ? import.meta.env.VITE_BACKEND_URL
+            : (window.__VITE_BACKEND_URL__ || 'https://resume-screening-system-e5qq.onrender.com');
+          await fetch(`${backendUrl}/api/application-received`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              candidate_email: candidateRecord.email,
+              candidate_name: candidateRecord.name,
+              job_title: jobTitle
+            })
+          });
+        } catch (emailErr) {
+          console.warn("[WARN] Could not send application confirmation email:", emailErr);
+        }
+
         statusEl.style.display = "none";
+
         successEl.style.display = "block";
         
         if (successState) {

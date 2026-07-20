@@ -531,15 +531,47 @@ const ebenDashboard = {
         document.body.style.overflow = '';
     },
 
-    handleSendEmail() {
+    async handleSendEmail() {
         const modal = document.getElementById('email-modal');
         const sendBtn = modal.querySelector('button[type="submit"]');
         const email = document.getElementById('email-to')?.value || '';
+        const subject = document.getElementById('email-subject')?.value || 'Regarding your application for EBEN Recruitment';
+        const message = document.getElementById('email-message')?.value || '';
+
+        if (!email) return;
 
         sendBtn.disabled = true;
         sendBtn.textContent = 'Sending...';
 
-        setTimeout(() => {
+        try {
+            const backendUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL)
+                ? import.meta.env.VITE_BACKEND_URL
+                : (window.__VITE_BACKEND_URL__ || 'https://resume-screening-system-e5qq.onrender.com');
+
+            const response = await fetch(`${backendUrl}/api/send-email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: email,
+                    subject: subject,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #E0DAD3; border-radius: 8px; background-color: #ffffff;">
+                            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #C8963E; padding-bottom: 12px;">
+                                <h1 style="color: #1C1C1C; font-size: 20px; margin: 0;">EBEN Recruitment Platform</h1>
+                            </div>
+                            <p style="color: #333333; line-height: 1.6; white-space: pre-wrap;">${message || 'Thank you for your application.'}</p>
+                            <hr style="border: none; border-top: 1px solid #E0DAD3; margin: 24px 0;">
+                            <p style="color: #6B6560; font-size: 14px;"><strong>Best regards,</strong><br>The Recruitment Team</p>
+                        </div>
+                    `
+                })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.message || 'Failed to send email');
+            }
+
             const sentEmails = JSON.parse(localStorage.getItem('eben-email-sent') || '{}');
             sentEmails[email] = true;
             localStorage.setItem('eben-email-sent', JSON.stringify(sentEmails));
@@ -552,9 +584,15 @@ const ebenDashboard = {
             if (successEmail) successEmail.textContent = email;
             if (successContent) successContent.style.display = 'block';
 
-            this.renderTable(); // Re-render to show checkmark
-        }, 1500);
+            this.renderTable();
+        } catch (err) {
+            console.error("[ERROR] Send email error:", err);
+            alert("Failed to send email: " + err.message);
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send Email';
+        }
     },
+
 
     toggleDropdown(event, candidateId) {
         event.stopPropagation();

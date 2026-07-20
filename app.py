@@ -9,7 +9,7 @@ from flask_cors import CORS
 load_dotenv()
 import requests
 from supabase import create_client, Client
-from email_service import send_job_message_email, send_interview_invite_email
+from email_service import send_job_message_email, send_interview_invite_email, send_application_received_email
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -17,15 +17,9 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Configure CORS: reads ALLOWED_ORIGINS (comma-separated) from env, falling back to Netlify domain
-allowed_origins_raw = os.environ.get('ALLOWED_ORIGINS') or os.environ.get('ALLOWED_ORIGIN', 'https://ezitom.netlify.app')
-allowed_origins = [o.strip() for o in allowed_origins_raw.split(',') if o.strip()] + [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000"
-]
-CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
+# Configure CORS: allow all origins so Netlify frontend preflight never fails with Failed to fetch
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+
 
 
 @app.route('/')
@@ -206,6 +200,30 @@ def invite_interview():
     except Exception as e:
         logger.exception("Error sending interview invite")
         return jsonify({"message": str(e)}), 500
+
+@app.route('/api/application-received', methods=['POST'])
+def application_received():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"message": "Missing JSON request body"}), 400
+            
+        candidate_name = data.get("candidate_name")
+        candidate_email = data.get("candidate_email")
+        job_title = data.get("job_title", "Position")
+        
+        if not candidate_email:
+            return jsonify({"message": "Missing candidate_email field"}), 400
+            
+        success = send_application_received_email(candidate_email, candidate_name, job_title)
+        if success:
+            return jsonify({"message": "Application confirmation email sent successfully"}), 200
+        else:
+            return jsonify({"message": "Failed to send application confirmation email"}), 500
+    except Exception as e:
+        logger.exception("Error sending application received email")
+        return jsonify({"message": str(e)}), 500
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

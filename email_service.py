@@ -129,3 +129,55 @@ def send_interview_invite_email(candidate_email, candidate_name, job_title, comp
     except Exception as e:
         logger.error(f"Unexpected error sending interview invite email to {candidate_email}: {e}")
         return False
+
+
+def send_application_received_email(candidate_email, candidate_name, job_title):
+    """
+    Sends an application confirmation email to a candidate via Brevo's TransactionalEmailsApi.
+    """
+    if not candidate_email:
+        logger.error("Cannot send application received email: recipient email is missing.")
+        return False
+
+    api_instance = _get_api_instance()
+    sender = _get_sender()
+
+    if not api_instance or not sender:
+        logger.error("Cannot send application received email: Brevo configuration missing.")
+        return False
+
+    display_name = candidate_name if candidate_name else "Applicant"
+    subject = f"Application Received: {job_title}"
+
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #E0DAD3; border-radius: 8px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #C8963E; padding-bottom: 12px;">
+            <h1 style="color: #1C1C1C; font-size: 20px; margin: 0;">EBEN Recruitment Platform</h1>
+        </div>
+        <h2 style="color: #3A7D44;">Hello {display_name},</h2>
+        <p style="color: #333333; line-height: 1.6;">Thank you for submitting your application for the position of <strong>{job_title}</strong>.</p>
+        <p style="color: #333333; line-height: 1.6;">We have successfully received your resume and credentials. Our evaluation team is currently reviewing applications, and you will receive an update regarding whether you are shortlisted or declined for the next stage of the recruitment process.</p>
+        <p style="color: #333333; line-height: 1.6;">We appreciate your interest in joining our team.</p>
+        <hr style="border: none; border-top: 1px solid #E0DAD3; margin: 24px 0;">
+        <p style="color: #6B6560; font-size: 14px;"><strong>Best regards,</strong><br>The Recruitment Team</p>
+    </div>
+    """
+
+    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+        to=[{"email": candidate_email, "name": display_name}],
+        sender=sender,
+        subject=subject,
+        html_content=html_content
+    )
+
+    try:
+        response = api_instance.send_transac_email(send_smtp_email)
+        logger.info(f"Application received email sent successfully to {candidate_email}. Message ID: {getattr(response, 'message_id', 'N/A')}")
+        return True
+    except ApiException as e:
+        logger.error(f"Brevo API error sending application received email to {candidate_email}: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error sending application received email to {candidate_email}: {e}")
+        return False
+

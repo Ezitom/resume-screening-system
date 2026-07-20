@@ -718,7 +718,7 @@ async function sendShortlistEmail() {
     try {
         const backendUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL)
             ? import.meta.env.VITE_BACKEND_URL
-            : (window.__VITE_BACKEND_URL__ || '');
+            : (window.__VITE_BACKEND_URL__ || 'https://resume-screening-system-e5qq.onrender.com');
         const response = await fetch(`${backendUrl}/api/send-email`, {
             method: 'POST',
             headers: {
@@ -791,7 +791,7 @@ async function sendRejectionEmail() {
     try {
         const backendUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL)
             ? import.meta.env.VITE_BACKEND_URL
-            : (window.__VITE_BACKEND_URL__ || '');
+            : (window.__VITE_BACKEND_URL__ || 'https://resume-screening-system-e5qq.onrender.com');
         const response = await fetch(`${backendUrl}/api/send-email`, {
             method: 'POST',
             headers: {
