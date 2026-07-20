@@ -1,6 +1,7 @@
 import os
 import logging
 import smtplib
+import requests
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.utils import formataddr
@@ -9,24 +10,12 @@ from email.utils import formataddr
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-SMTP_SERVER = "smtp-relay.brevo.com"
-SMTP_PORT = 587
-
 
 def _get_smtp_config():
-    login = os.environ.get("BREVO_SMTP_LOGIN")
-    password = os.environ.get("BREVO_SMTP_PASSWORD")
-    sender_email = os.environ.get("BREVO_SENDER_EMAIL") or os.environ.get("SENDER_EMAIL")
-    sender_name = os.environ.get("BREVO_SENDER_NAME") or os.environ.get("SENDER_NAME", "EBEN Recruitment")
-
-    if not login or not password or not sender_email:
-        logger.error(
-            f"Brevo SMTP configuration is incomplete. "
-            f"BREVO_SMTP_LOGIN={'SET' if login else 'MISSING'}, "
-            f"BREVO_SMTP_PASSWORD={'SET' if password else 'MISSING'}, "
-            f"BREVO_SENDER_EMAIL={'SET' if sender_email else 'MISSING'}"
-        )
-        return None
+    login = os.environ.get("BREVO_SMTP_LOGIN") or os.environ.get("BREVO_LOGIN") or "b1230e001@smtp-brevo.com"
+    password = os.environ.get("BREVO_SMTP_PASSWORD") or os.environ.get("BREVO_PASSWORD") or os.environ.get("BREVO_API_KEY")
+    sender_email = os.environ.get("BREVO_SENDER_EMAIL") or os.environ.get("SENDER_EMAIL") or "onitomiwa911@gmail.com"
+    sender_name = os.environ.get("BREVO_SENDER_NAME") or os.environ.get("SENDER_NAME") or "EBEN Recruitment"
 
     return {
         "login": login,
@@ -38,47 +27,113 @@ def _get_smtp_config():
 
 def _send_smtp_email(to_email, to_name, subject, html_content):
     """
-    Core function to send an email using Brevo SMTP relay via smtplib.
-    Returns True on confirmed send, False on any exception.
-    Logs full exception text (str(e)) with stack trace.
+    Ultra-resilient email dispatch for Brevo.
+    Tries SMTP 587 (STARTTLS) -> SMTP 465 (SSL) -> SMTP 2525 -> HTTP REST API.
+    Returns True on success, False on failure with detailed error logging.
     """
     config = _get_smtp_config()
-    if not config:
-        logger.error("Cannot send email: Brevo SMTP configuration missing.")
-        return False
-
     if not to_email:
         logger.error("Cannot send email: recipient email address (to_email) is missing.")
         return False
 
+    if not config["password"]:
+        logger.error("Cannot send email: BREVO_SMTP_PASSWORD or BREVO_API_KEY environment variable is missing!")
+        return False
+
+    display_name = to_name or "Candidate"
+
+    # --- Method 1: SMTP Port 587 (STARTTLS) ---
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = formataddr((config["sender_name"], config["sender_email"]))
-        msg["To"] = formataddr((to_name or "Candidate", to_email))
+        msg["To"] = formataddr((display_name, to_email))
+        msg.attach(MIMEText(html_content, "html", "utf-8"))
 
-        part_html = MIMEText(html_content, "html", "utf-8")
-        msg.attach(part_html)
-
-        logger.info(f"Connecting to SMTP server {SMTP_SERVER}:{SMTP_PORT} to send email to {to_email}...")
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30) as server:
+        logger.info(f"[SMTP 587] Attempting STARTTLS to smtp-relay.brevo.com:587 for {to_email}...")
+        with smtplib.SMTP("smtp-relay.brevo.com", 587, timeout=8) as server:
             server.ehlo()
             server.starttls()
             server.ehlo()
             server.login(config["login"], config["password"])
             server.sendmail(config["sender_email"], [to_email], msg.as_string())
-
-        logger.info(f"Email successfully sent via Brevo SMTP to {to_email}. Subject: '{subject}'")
+        logger.info(f"[SMTP 587] Successfully sent email to {to_email}")
         return True
-
     except Exception as e:
-        logger.error(f"Failed to send SMTP email to {to_email} (Subject: '{subject}'): {str(e)}", exc_info=True)
-        return False
+        logger.warning(f"[SMTP 587 Failed] {str(e)}. Trying port 465 SSL...")
+
+    # --- Method 2: SMTP Port 465 (SSL) ---
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = formataddr((config["sender_name"], config["sender_email"]))
+        msg["To"] = formataddr((display_name, to_email))
+        msg.attach(MIMEText(html_content, "html", "utf-8"))
+
+        logger.info(f"[SMTP 465] Attempting SSL to smtp-relay.brevo.com:465 for {to_email}...")
+        with smtplib.SMTP_SSL("smtp-relay.brevo.com", 465, timeout=8) as server:
+            server.login(config["login"], config["password"])
+            server.sendmail(config["sender_email"], [to_email], msg.as_string())
+        logger.info(f"[SMTP 465] Successfully sent email to {to_email}")
+        return True
+    except Exception as e:
+        logger.warning(f"[SMTP 465 Failed] {str(e)}. Trying port 2525...")
+
+    # --- Method 3: SMTP Port 2525 (Alternative STARTTLS) ---
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = formataddr((config["sender_name"], config["sender_email"]))
+        msg["To"] = formataddr((display_name, to_email))
+        msg.attach(MIMEText(html_content, "html", "utf-8"))
+
+        logger.info(f"[SMTP 2525] Attempting STARTTLS to smtp-relay.brevo.com:2525 for {to_email}...")
+        with smtplib.SMTP("smtp-relay.brevo.com", 2525, timeout=8) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(config["login"], config["password"])
+            server.sendmail(config["sender_email"], [to_email], msg.as_string())
+        logger.info(f"[SMTP 2525] Successfully sent email to {to_email}")
+        return True
+    except Exception as e:
+        logger.warning(f"[SMTP 2525 Failed] {str(e)}. Trying Brevo HTTP API fallback...")
+
+    # --- Method 4: Brevo HTTP REST API Fallback ---
+    try:
+        logger.info(f"[HTTP API] Attempting Brevo REST API fallback for {to_email}...")
+        api_key = config["password"]
+        headers = {
+            "accept": "application/json",
+            "api-key": api_key,
+            "content-type": "application/json"
+        }
+        payload = {
+            "sender": {"name": config["sender_name"], "email": config["sender_email"]},
+            "to": [{"email": to_email, "name": display_name}],
+            "subject": subject,
+            "htmlContent": html_content
+        }
+        response = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+        if response.status_code in [200, 201, 202]:
+            logger.info(f"[HTTP API] Successfully sent email to {to_email}. Response: {response.text}")
+            return True
+        else:
+            logger.error(f"[HTTP API Failed] Status: {response.status_code}, Body: {response.text}")
+    except Exception as e:
+        logger.error(f"[HTTP API Error] Failed to send email to {to_email}: {str(e)}", exc_info=True)
+
+    return False
 
 
 def send_job_message_email(candidate_email, candidate_name, job_title, message_text):
     """
-    Sends an email update to a candidate regarding a job posting via Brevo's SMTP relay.
+    Sends an email update to a candidate regarding a job posting via Brevo's SMTP relay / API.
     Returns True if sent successfully, False otherwise.
     """
     display_name = candidate_name if candidate_name else "Candidate"
@@ -97,7 +152,7 @@ def send_job_message_email(candidate_email, candidate_name, job_title, message_t
 
 def send_interview_invite_email(candidate_email, candidate_name, job_title, company_name):
     """
-    Sends an interview invitation email to a candidate via Brevo's SMTP relay.
+    Sends an interview invitation email to a candidate via Brevo's SMTP relay / API.
     Returns True if sent successfully, False otherwise.
     """
     display_name = candidate_name if candidate_name else "Candidate"
@@ -122,7 +177,7 @@ def send_interview_invite_email(candidate_email, candidate_name, job_title, comp
 
 def send_application_confirmation_email(candidate_email, candidate_name, job_title):
     """
-    Sends a short HTML email confirming application receipt via Brevo's SMTP relay.
+    Sends a short HTML email confirming application receipt via Brevo's SMTP relay / API.
     Returns True if sent successfully, False otherwise.
     """
     display_name = candidate_name if candidate_name else "Applicant"
@@ -144,14 +199,13 @@ def send_application_confirmation_email(candidate_email, candidate_name, job_tit
     return _send_smtp_email(candidate_email, display_name, subject, html_content)
 
 
-# Backwards compatibility alias for application confirmation
 def send_application_received_email(candidate_email, candidate_name, job_title):
     return send_application_confirmation_email(candidate_email, candidate_name, job_title)
 
 
 def send_custom_html_email(to_email, to_name, subject, html_content):
     """
-    Sends a custom HTML email via Brevo SMTP relay.
+    Sends a custom HTML email via Brevo SMTP relay / API.
     Returns True if sent successfully, False otherwise.
     """
     return _send_smtp_email(to_email, to_name, subject, html_content)
