@@ -35,26 +35,29 @@ export default defineConfig(({ mode }) => {
               req.on('data', chunk => { body += chunk; });
               req.on('end', async () => {
                 try {
-                  const { to, subject, html } = JSON.parse(body);
-                  const resendKey = env.VITE_RESEND_API_KEY;
+                  const { to, subject, html, to_name } = JSON.parse(body || '{}');
+                  const brevoKey = env.BREVO_API_KEY;
+                  const senderEmail = env.BREVO_SENDER_EMAIL;
+                  const senderName = env.BREVO_SENDER_NAME || 'EBEN Recruitment';
 
-                  if (!resendKey) {
+                  if (!brevoKey || !senderEmail) {
                     res.writeHead(500, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ message: 'VITE_RESEND_API_KEY is not defined in local .env file' }));
+                    res.end(JSON.stringify({ message: 'BREVO_API_KEY or BREVO_SENDER_EMAIL is not defined in local .env file' }));
                     return;
                   }
 
-                  const response = await fetch('https://api.resend.com/emails', {
+                  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
                     method: 'POST',
                     headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${resendKey}`
+                      'accept': 'application/json',
+                      'content-type': 'application/json',
+                      'api-key': brevoKey
                     },
                     body: JSON.stringify({
-                      from: 'onboarding@resend.dev',
-                      to,
+                      sender: { name: senderName, email: senderEmail },
+                      to: [{ email: to, name: to_name || 'Candidate' }],
                       subject,
-                      html
+                      htmlContent: html
                     })
                   });
 

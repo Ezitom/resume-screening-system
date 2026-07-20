@@ -20,9 +20,33 @@
 // auth.js — Complete Authentication Helper
 // Handles all auth operations using Supabase
 
+function getSupabaseClient() {
+  if (window.supabaseClient) return window.supabaseClient;
+  if (typeof supabase !== 'undefined') {
+    const url = import.meta.env?.VITE_SUPABASE_URL;
+    const key = import.meta.env?.VITE_SUPABASE_ANON_KEY;
+    if (url && key) {
+      try {
+        const { createClient } = supabase;
+        window.supabaseClient = createClient(url, key, {
+          auth: { persistSession: true, autoRefreshToken: true }
+        });
+        return window.supabaseClient;
+      } catch (err) {
+        console.error("Error creating Supabase client in auth.js fallback:", err);
+      }
+    }
+  }
+  return null;
+}
+
 // ── LOGIN ────────────────────────────────────────────────
 async function loginRecruiter(email, password) {
-  const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+  const client = getSupabaseClient();
+  if (!client || !client.auth) {
+    throw new Error("Supabase client is not initialized. Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your environment.");
+  }
+  const { data, error } = await client.auth.signInWithPassword({
     email: email.trim(),
     password: password
   });
@@ -33,26 +57,39 @@ async function loginRecruiter(email, password) {
 
 // ── LOGOUT ───────────────────────────────────────────────
 async function logoutRecruiter() {
-  const { error } = await window.supabaseClient.auth.signOut();
+  const client = getSupabaseClient();
+  if (!client || !client.auth) {
+    window.location.href = "login.html";
+    return;
+  }
+  const { error } = await client.auth.signOut();
   if (error) throw new Error(error.message);
   window.location.href = "login.html";
 }
 
 // ── GET CURRENT SESSION ──────────────────────────────────
 async function getCurrentSession() {
-  const { data: { session } } = await window.supabaseClient.auth.getSession();
+  const client = getSupabaseClient();
+  if (!client || !client.auth) return null;
+  const { data: { session } } = await client.auth.getSession();
   return session;
 }
 
 // ── GET CURRENT USER ─────────────────────────────────────
 async function getCurrentUser() {
-  const { data: { user } } = await window.supabaseClient.auth.getUser();
+  const client = getSupabaseClient();
+  if (!client || !client.auth) return null;
+  const { data: { user } } = await client.auth.getUser();
   return user;
 }
 
 // ── FORGOT PASSWORD ──────────────────────────────────────
 async function sendPasswordReset(email) {
-  const { error } = await window.supabaseClient.auth.resetPasswordForEmail(
+  const client = getSupabaseClient();
+  if (!client || !client.auth) {
+    throw new Error("Supabase client is not initialized.");
+  }
+  const { error } = await client.auth.resetPasswordForEmail(
     email.trim(),
     { redirectTo: window.location.origin + "/reset-password.html" }
   );
@@ -61,7 +98,11 @@ async function sendPasswordReset(email) {
 
 // ── RESET PASSWORD (after clicking email link) ───────────
 async function updatePassword(newPassword) {
-  const { error } = await window.supabaseClient.auth.updateUser({
+  const client = getSupabaseClient();
+  if (!client || !client.auth) {
+    throw new Error("Supabase client is not initialized.");
+  }
+  const { error } = await client.auth.updateUser({
     password: newPassword
   });
   if (error) throw new Error(error.message);
@@ -69,11 +110,15 @@ async function updatePassword(newPassword) {
 
 // ── INVITE RECRUITER (admin only) ────────────────────────
 async function inviteRecruiter(email, fullName) {
-  const { data, error } = await window.supabaseClient.auth.admin.inviteUserByEmail(email);
+  const client = getSupabaseClient();
+  if (!client || !client.auth) {
+    throw new Error("Supabase client is not initialized.");
+  }
+  const { data, error } = await client.auth.admin.inviteUserByEmail(email);
   if (error) throw new Error(error.message);
 
   // Save recruiter profile to recruiters table
-  await window.supabaseClient.from("recruiters").insert([{
+  await client.from("recruiters").insert([{
     id: data.user.id,
     full_name: fullName,
     email: email,
@@ -102,6 +147,7 @@ async function redirectIfLoggedIn() {
     window.location.href = "dashboard.html";
   }
 }
+
 window.loginRecruiter = loginRecruiter;
 window.logoutRecruiter = logoutRecruiter;
 window.getCurrentSession = getCurrentSession;

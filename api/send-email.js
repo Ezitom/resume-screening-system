@@ -17,26 +17,29 @@ module.exports = async (req, res) => {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { to, subject, html } = req.body;
+  const { to, subject, html, to_name } = req.body || {};
 
   try {
-    const resendKey = process.env.VITE_RESEND_API_KEY || process.env.RESEND_API_KEY;
+    const brevoKey = process.env.BREVO_API_KEY;
+    const senderEmail = process.env.BREVO_SENDER_EMAIL;
+    const senderName = process.env.BREVO_SENDER_NAME || 'EBEN Recruitment';
 
-    if (!resendKey) {
-      return res.status(500).json({ message: 'Resend API key is not configured on the server.' });
+    if (!brevoKey || !senderEmail) {
+      return res.status(500).json({ message: 'Brevo API key or sender email is not configured on the server.' });
     }
 
-    const response = await fetch('https://api.resend.com/emails', {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${resendKey}`
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'api-key': brevoKey
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev',
-        to,
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: to, name: to_name || 'Candidate' }],
         subject,
-        html
+        htmlContent: html
       })
     });
 

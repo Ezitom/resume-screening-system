@@ -716,7 +716,10 @@ async function sendShortlistEmail() {
     statusEl.style.display = 'none';
 
     try {
-        const response = await fetch('/api/send-email', {
+        const backendUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL)
+            ? import.meta.env.VITE_BACKEND_URL
+            : (window.__VITE_BACKEND_URL__ || '');
+        const response = await fetch(`${backendUrl}/api/send-email`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -786,7 +789,10 @@ async function sendRejectionEmail() {
     statusEl.style.display = 'none';
 
     try {
-        const response = await fetch('/api/send-email', {
+        const backendUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL)
+            ? import.meta.env.VITE_BACKEND_URL
+            : (window.__VITE_BACKEND_URL__ || '');
+        const response = await fetch(`${backendUrl}/api/send-email`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
