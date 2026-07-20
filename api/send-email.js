@@ -20,9 +20,19 @@ module.exports = async (req, res) => {
   const { to, subject, html, to_name } = req.body || {};
 
   try {
-    const brevoKey = process.env.BREVO_API_KEY;
-    const senderEmail = process.env.BREVO_SENDER_EMAIL;
-    const senderName = process.env.BREVO_SENDER_NAME || 'EBEN Recruitment';
+    const brevoKey = process.env.MAIL_PASS || process.env.BREVO_API_KEY || process.env.BREVO_SMTP_PASSWORD;
+    let senderEmail = process.env.BREVO_SENDER_EMAIL;
+    let senderName = process.env.BREVO_SENDER_NAME || 'Resume Screening Team';
+
+    if (process.env.MAIL_FROM) {
+      const match = process.env.MAIL_FROM.match(/^(.*?)\s*<([^>]+)>$/);
+      if (match) {
+        senderName = match[1].trim() || senderName;
+        senderEmail = match[2].trim();
+      } else {
+        senderEmail = process.env.MAIL_FROM.trim();
+      }
+    }
 
     if (!brevoKey || !senderEmail) {
       return res.status(500).json({ message: 'Brevo API key or sender email is not configured on the server.' });

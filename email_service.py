@@ -4,7 +4,7 @@ import smtplib
 import requests
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.utils import formataddr
+from email.utils import formataddr, parseaddr
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -12,17 +12,32 @@ logger = logging.getLogger(__name__)
 
 
 def _get_smtp_config():
-    login = os.environ.get("BREVO_SMTP_LOGIN") or os.environ.get("BREVO_LOGIN")
-    password = os.environ.get("BREVO_SMTP_PASSWORD") or os.environ.get("BREVO_PASSWORD") or os.environ.get("BREVO_API_KEY")
-    sender_email = os.environ.get("BREVO_SENDER_EMAIL") or os.environ.get("SENDER_EMAIL")
-    sender_name = os.environ.get("BREVO_SENDER_NAME") or os.environ.get("SENDER_NAME") or "Resume Screening Team"
+    host = os.environ.get("MAIL_HOST") or os.environ.get("BREVO_SMTP_HOST") or "smtp-relay.brevo.com"
+    login = os.environ.get("MAIL_USER") or os.environ.get("BREVO_SMTP_LOGIN") or os.environ.get("BREVO_LOGIN")
+    password = os.environ.get("MAIL_PASS") or os.environ.get("BREVO_SMTP_PASSWORD") or os.environ.get("BREVO_PASSWORD") or os.environ.get("BREVO_API_KEY")
     
+    sender_email = os.environ.get("BREVO_SENDER_EMAIL") or os.environ.get("SENDER_EMAIL")
+    sender_name = os.environ.get("BREVO_SENDER_NAME") or os.environ.get("SENDER_NAME")
+
+    mail_from = os.environ.get("MAIL_FROM")
+    if mail_from:
+        p_name, p_email = parseaddr(mail_from)
+        if p_email:
+            sender_email = p_email
+        if p_name:
+            sender_name = p_name
+
+    if not sender_name:
+        sender_name = "Resume Screening Team"
+
+    port_val = os.environ.get("MAIL_PORT") or os.environ.get("BREVO_SMTP_PORT")
     try:
-        port = int(os.environ.get("BREVO_SMTP_PORT", 2525))
+        port = int(port_val) if port_val else 587
     except (ValueError, TypeError):
-        port = 2525
+        port = 587
 
     return {
+        "host": host,
         "login": login,
         "password": password,
         "sender_email": sender_email,
@@ -33,7 +48,7 @@ def _get_smtp_config():
 
 def _send_smtp_email(to_email, to_name, subject, html_content):
     """
-    Email dispatch for Brevo using SMTP port 2525 (with HTTP API fallback if port is unreachable).
+    Email dispatch for Brevo using SMTP (with HTTP API fallback if port is unreachable).
     Returns True on success, False on failure with detailed exception logging.
     """
     config = _get_smtp_config()
@@ -42,38 +57,51 @@ def _send_smtp_email(to_email, to_name, subject, html_content):
         return False
 
     if not config["login"] or not config["password"] or not config["sender_email"]:
-        logger.error("Cannot send email: BREVO_SMTP_LOGIN, BREVO_SMTP_PASSWORD, or BREVO_SENDER_EMAIL environment variable is missing!")
+        logger.error("Cannot send email: MAIL_USER/BREVO_SMTP_LOGIN, MAIL_PASS/BREVO_SMTP_PASSWORD, or MAIL_FROM/BREVO_SENDER_EMAIL is missing!")
         return False
 
     display_name = to_name or "Candidate"
-    port = config.get("port", 2525)
+    primary_port = config.get("port", 2525)
+    host = config.get("host", "smtp-relay.brevo.com")
 
-    # --- Method 1: SMTP (Default Port 2525) ---
-    try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = formataddr((config["sender_name"], config["sender_email"]))
-        msg["To"] = formataddr((display_name, to_email))
-        msg.attach(MIMEText(html_content, "html", "utf-8"))
+    # --- Method 1: SMTP (Try primary port, then fallback ports like 2525/587) ---
+    ports_to_try = [primary_port]
+    for p in [2525, 587, 465]:
+        if p not in ports_to_try:
+            ports_to_try.append(p)
 
-        logger.info(f"[SMTP {port}] Connecting to smtp-relay.brevo.com:{port} to send email to {to_email}...")
-        with smtplib.SMTP("smtp-relay.brevo.com", port, timeout=6) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(config["login"], config["password"])
-            server.sendmail(config["sender_email"], [to_email], msg.as_string())
-        logger.info(f"[SMTP {port}] Successfully sent email to {to_email}")
-        return True
-    except Exception as e:
-        logger.warning(f"[SMTP {port} Failed] {str(e)}. Attempting Brevo HTTP API fallback...")
+    for port in ports_to_try:
+        try:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = formataddr((config["sender_name"], config["sender_email"]))
+            msg["To"] = formataddr((display_name, to_email))
+            msg.attach(MIMEText(html_content, "html", "utf-8"))
+
+            logger.info(f"[SMTP {port}] Connecting to {host}:{port} to send email to {to_email}...")
+            if port == 465:
+                with smtplib.SMTP_SSL(host, port, timeout=6) as server:
+                    server.login(config["login"], config["password"])
+                    server.sendmail(config["sender_email"], [to_email], msg.as_string())
+            else:
+                with smtplib.SMTP(host, port, timeout=6) as server:
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                    server.login(config["login"], config["password"])
+                    server.sendmail(config["sender_email"], [to_email], msg.as_string())
+            logger.info(f"[SMTP {port}] Successfully sent email to {to_email}")
+            return True
+        except Exception as e:
+            logger.warning(f"[SMTP port {port} failed]: {str(e)}")
 
     # --- Method 2: Brevo HTTP REST API Fallback ---
+    api_key = os.environ.get("BREVO_API_KEY") or config["password"]
     try:
         logger.info(f"[HTTP API] Sending via Brevo REST API fallback for {to_email}...")
         headers = {
             "accept": "application/json",
-            "api-key": config["password"],
+            "api-key": api_key,
             "content-type": "application/json"
         }
         payload = {
