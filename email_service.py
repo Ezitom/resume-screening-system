@@ -27,8 +27,8 @@ def _get_smtp_config():
 
 def _send_smtp_email(to_email, to_name, subject, html_content):
     """
-    Ultra-resilient email dispatch for Brevo.
-    Tries SMTP 587 (STARTTLS) -> SMTP 465 (SSL) -> SMTP 2525 -> HTTP REST API.
+    Ultra-fast & resilient email dispatch for Brevo.
+    Tries SMTP 2525 (Fastest on Render) -> Brevo HTTP API -> SMTP 587 -> SMTP 465.
     Returns True on success, False on failure with detailed error logging.
     """
     config = _get_smtp_config()
@@ -42,7 +42,7 @@ def _send_smtp_email(to_email, to_name, subject, html_content):
 
     display_name = to_name or "Candidate"
 
-    # --- Method 1: SMTP Port 587 (STARTTLS) ---
+    # --- Method 1: SMTP Port 2525 (Fastest on Render) ---
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
@@ -50,45 +50,8 @@ def _send_smtp_email(to_email, to_name, subject, html_content):
         msg["To"] = formataddr((display_name, to_email))
         msg.attach(MIMEText(html_content, "html", "utf-8"))
 
-        logger.info(f"[SMTP 587] Attempting STARTTLS to smtp-relay.brevo.com:587 for {to_email}...")
-        with smtplib.SMTP("smtp-relay.brevo.com", 587, timeout=8) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(config["login"], config["password"])
-            server.sendmail(config["sender_email"], [to_email], msg.as_string())
-        logger.info(f"[SMTP 587] Successfully sent email to {to_email}")
-        return True
-    except Exception as e:
-        logger.warning(f"[SMTP 587 Failed] {str(e)}. Trying port 465 SSL...")
-
-    # --- Method 2: SMTP Port 465 (SSL) ---
-    try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = formataddr((config["sender_name"], config["sender_email"]))
-        msg["To"] = formataddr((display_name, to_email))
-        msg.attach(MIMEText(html_content, "html", "utf-8"))
-
-        logger.info(f"[SMTP 465] Attempting SSL to smtp-relay.brevo.com:465 for {to_email}...")
-        with smtplib.SMTP_SSL("smtp-relay.brevo.com", 465, timeout=8) as server:
-            server.login(config["login"], config["password"])
-            server.sendmail(config["sender_email"], [to_email], msg.as_string())
-        logger.info(f"[SMTP 465] Successfully sent email to {to_email}")
-        return True
-    except Exception as e:
-        logger.warning(f"[SMTP 465 Failed] {str(e)}. Trying port 2525...")
-
-    # --- Method 3: SMTP Port 2525 (Alternative STARTTLS) ---
-    try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = formataddr((config["sender_name"], config["sender_email"]))
-        msg["To"] = formataddr((display_name, to_email))
-        msg.attach(MIMEText(html_content, "html", "utf-8"))
-
-        logger.info(f"[SMTP 2525] Attempting STARTTLS to smtp-relay.brevo.com:2525 for {to_email}...")
-        with smtplib.SMTP("smtp-relay.brevo.com", 2525, timeout=8) as server:
+        logger.info(f"[SMTP 2525] Sending via smtp-relay.brevo.com:2525 to {to_email}...")
+        with smtplib.SMTP("smtp-relay.brevo.com", 2525, timeout=5) as server:
             server.ehlo()
             server.starttls()
             server.ehlo()
@@ -99,13 +62,12 @@ def _send_smtp_email(to_email, to_name, subject, html_content):
     except Exception as e:
         logger.warning(f"[SMTP 2525 Failed] {str(e)}. Trying Brevo HTTP API fallback...")
 
-    # --- Method 4: Brevo HTTP REST API Fallback ---
+    # --- Method 2: Brevo HTTP REST API ---
     try:
-        logger.info(f"[HTTP API] Attempting Brevo REST API fallback for {to_email}...")
-        api_key = config["password"]
+        logger.info(f"[HTTP API] Sending via Brevo REST API fallback for {to_email}...")
         headers = {
             "accept": "application/json",
-            "api-key": api_key,
+            "api-key": config["password"],
             "content-type": "application/json"
         }
         payload = {
@@ -118,15 +80,52 @@ def _send_smtp_email(to_email, to_name, subject, html_content):
             "https://api.brevo.com/v3/smtp/email",
             json=payload,
             headers=headers,
-            timeout=10
+            timeout=8
         )
         if response.status_code in [200, 201, 202]:
             logger.info(f"[HTTP API] Successfully sent email to {to_email}. Response: {response.text}")
             return True
         else:
-            logger.error(f"[HTTP API Failed] Status: {response.status_code}, Body: {response.text}")
+            logger.warning(f"[HTTP API Failed] Status: {response.status_code}, Body: {response.text}. Trying port 587...")
     except Exception as e:
-        logger.error(f"[HTTP API Error] Failed to send email to {to_email}: {str(e)}", exc_info=True)
+        logger.warning(f"[HTTP API Error] {str(e)}. Trying port 587...")
+
+    # --- Method 3: SMTP Port 587 (STARTTLS) ---
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = formataddr((config["sender_name"], config["sender_email"]))
+        msg["To"] = formataddr((display_name, to_email))
+        msg.attach(MIMEText(html_content, "html", "utf-8"))
+
+        logger.info(f"[SMTP 587] Sending via smtp-relay.brevo.com:587 for {to_email}...")
+        with smtplib.SMTP("smtp-relay.brevo.com", 587, timeout=5) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(config["login"], config["password"])
+            server.sendmail(config["sender_email"], [to_email], msg.as_string())
+        logger.info(f"[SMTP 587] Successfully sent email to {to_email}")
+        return True
+    except Exception as e:
+        logger.warning(f"[SMTP 587 Failed] {str(e)}. Trying port 465 SSL...")
+
+    # --- Method 4: SMTP Port 465 (SSL) ---
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = formataddr((config["sender_name"], config["sender_email"]))
+        msg["To"] = formataddr((display_name, to_email))
+        msg.attach(MIMEText(html_content, "html", "utf-8"))
+
+        logger.info(f"[SMTP 465] Sending via smtp-relay.brevo.com:465 for {to_email}...")
+        with smtplib.SMTP_SSL("smtp-relay.brevo.com", 465, timeout=5) as server:
+            server.login(config["login"], config["password"])
+            server.sendmail(config["sender_email"], [to_email], msg.as_string())
+        logger.info(f"[SMTP 465] Successfully sent email to {to_email}")
+        return True
+    except Exception as e:
+        logger.error(f"[SMTP 465 Error] Failed to send email to {to_email}: {str(e)}", exc_info=True)
 
     return False
 
