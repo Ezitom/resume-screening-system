@@ -28,6 +28,10 @@ allowed_origins = [o.strip() for o in allowed_origins_raw.split(',') if o.strip(
 CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 
 
+@app.route('/')
+def health_check():
+    return jsonify({"status": "ok", "message": "EBEN backend is running"}), 200
+
 # Initialize Supabase Client
 supabase_url = os.environ.get("SUPABASE_URL")
 supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
