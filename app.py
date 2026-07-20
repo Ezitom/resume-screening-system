@@ -7,9 +7,13 @@ from flask_cors import CORS
 
 # Load local environment variables (if .env exists)
 load_dotenv()
-import requests
 from supabase import create_client, Client
-from email_service import send_job_message_email, send_interview_invite_email, send_application_received_email
+from email_service import (
+    send_job_message_email,
+    send_interview_invite_email,
+    send_application_confirmation_email,
+    send_custom_html_email
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -21,10 +25,10 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 
-
 @app.route('/')
 def health_check():
     return jsonify({"status": "ok", "message": "EBEN backend is running"}), 200
+
 
 # Initialize Supabase Client
 supabase_url = os.environ.get("SUPABASE_URL")
@@ -40,41 +44,6 @@ if supabase_url and supabase_key:
 else:
     logger.warning("Supabase environment variables are missing!")
 
-# Brevo configuration
-BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
-BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL") or os.environ.get("SENDER_EMAIL")
-SENDER_NAME = os.environ.get("SENDER_NAME", "EBEN Recruitment")
-
-def send_brevo_email(to_email, to_name, subject, html_content):
-    if not BREVO_API_KEY:
-        raise ValueError("BREVO_API_KEY is not configured on the server.")
-    if not BREVO_SENDER_EMAIL:
-        raise ValueError("BREVO_SENDER_EMAIL is not configured on the server.")
-    
-    headers = {
-        "accept": "application/json",
-        "api-key": BREVO_API_KEY,
-        "content-type": "application/json"
-    }
-    
-    payload = {
-        "sender": {"name": SENDER_NAME, "email": BREVO_SENDER_EMAIL},
-        "to": [{"email": to_email, "name": to_name}],
-        "subject": subject,
-        "htmlContent": html_content
-    }
-    
-    response = requests.post(
-        "https://api.brevo.com/v3/smtp/email",
-        json=payload,
-        headers=headers
-    )
-    
-    if response.status_code not in [200, 201, 202]:
-        logger.error(f"Brevo API error: {response.status_code} - {response.text}")
-        raise RuntimeError(f"Brevo API error: {response.text}")
-        
-    return response.json()
 
 @app.route('/api/send-email', methods=['POST'])
 def send_email():
@@ -91,16 +60,20 @@ def send_email():
         if not to_email or not subject or not html_content:
             return jsonify({"message": "Missing required fields (to, subject, html)"}), 400
             
-        res = send_brevo_email(to_email, to_name, subject, html_content)
-        return jsonify(res), 200
+        success = send_custom_html_email(to_email, to_name, subject, html_content)
+        if success:
+            return jsonify({"message": "Email sent successfully"}), 200
+        else:
+            return jsonify({"message": "Failed to send email via Brevo SMTP. Check server logs."}), 500
     except Exception as e:
-        logger.exception("Error sending email")
+        logger.exception("Error sending email endpoint")
         return jsonify({"message": str(e)}), 500
+
 
 @app.route('/api/job-posting-email', methods=['POST'])
 @app.route('/api/jobs/message-applicants', methods=['POST'])
 def message_applicants():
-    # Trigger A: send message to all applicants of a job
+    # Send message to all applicants of a job posting
     try:
         data = request.get_json()
         if not data:
@@ -108,7 +81,6 @@ def message_applicants():
             
         job_title = data.get("job_title")
         message_content = data.get("message")
-        company_name = data.get("company_name", "EBEN Recruitment")
         
         if not job_title or not message_content:
             return jsonify({"message": "Missing required fields (job_title, message)"}), 400
@@ -148,23 +120,25 @@ def message_applicants():
                 results.append({"email": cand_email, "name": cand_name, "status": "success"})
             else:
                 failure_count += 1
-                results.append({"email": cand_email, "name": cand_name, "status": "failed", "error": "Failed to send email via Brevo"})
+                results.append({"email": cand_email, "name": cand_name, "status": "failed", "error": "Failed to send email via Brevo SMTP"})
                 
+        status_code = 200 if success_count > 0 else 500
         return jsonify({
             "message": f"Processed {len(candidates)} candidates.",
             "success_count": success_count,
             "failure_count": failure_count,
             "results": results
-        }), 200
+        }), status_code
         
     except Exception as e:
         logger.exception("Error messaging applicants")
         return jsonify({"message": str(e)}), 500
 
+
 @app.route('/api/interview-invite', methods=['POST'])
 @app.route('/api/candidates/invite-interview', methods=['POST'])
 def invite_interview():
-    # Trigger B: send individual interview invite
+    # Send individual interview invite
     try:
         data = request.get_json()
         if not data:
@@ -195,13 +169,15 @@ def invite_interview():
         if success:
             return jsonify({"message": "Interview invite sent successfully"}), 200
         else:
-            return jsonify({"message": "Failed to send interview invite email"}), 500
+            return jsonify({"message": "Failed to send interview invite email via Brevo SMTP. Check server logs."}), 500
         
     except Exception as e:
         logger.exception("Error sending interview invite")
         return jsonify({"message": str(e)}), 500
 
+
 @app.route('/api/application-received', methods=['POST'])
+@app.route('/api/application-confirmation', methods=['POST'])
 def application_received():
     try:
         data = request.get_json()
@@ -215,13 +191,13 @@ def application_received():
         if not candidate_email:
             return jsonify({"message": "Missing candidate_email field"}), 400
             
-        success = send_application_received_email(candidate_email, candidate_name, job_title)
+        success = send_application_confirmation_email(candidate_email, candidate_name, job_title)
         if success:
             return jsonify({"message": "Application confirmation email sent successfully"}), 200
         else:
-            return jsonify({"message": "Failed to send application confirmation email"}), 500
+            return jsonify({"message": "Failed to send application confirmation email via Brevo SMTP. Check server logs."}), 500
     except Exception as e:
-        logger.exception("Error sending application received email")
+        logger.exception("Error sending application confirmation email")
         return jsonify({"message": str(e)}), 500
 
 

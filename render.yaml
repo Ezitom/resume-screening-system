@@ -13,7 +13,9 @@ services:
         sync: false
       - key: SUPABASE_ANON_KEY
         sync: false
-      - key: BREVO_API_KEY
+      - key: BREVO_SMTP_LOGIN
+        sync: false
+      - key: BREVO_SMTP_PASSWORD
         sync: false
       - key: BREVO_SENDER_EMAIL
         sync: false

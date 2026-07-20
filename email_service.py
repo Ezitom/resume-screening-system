@@ -1,52 +1,86 @@
 import os
 import logging
-import sib_api_v3_sdk
-from sib_api_v3_sdk.rest import ApiException
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.utils import formataddr
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-def _get_api_instance():
-    """Initializes and returns the Brevo TransactionalEmailsApi client using BREVO_API_KEY."""
-    api_key = os.environ.get("BREVO_API_KEY")
-    if not api_key:
-        logger.error("BREVO_API_KEY environment variable is not configured.")
-        return None
-
-    configuration = sib_api_v3_sdk.Configuration()
-    configuration.api_key['api-key'] = api_key
-    api_client = sib_api_v3_sdk.ApiClient(configuration)
-    return sib_api_v3_sdk.TransactionalEmailsApi(api_client)
+SMTP_SERVER = "smtp-relay.brevo.com"
+SMTP_PORT = 587
 
 
-def _get_sender():
-    """Retrieves sender name and email from environment variables BREVO_SENDER_NAME and BREVO_SENDER_EMAIL."""
-    sender_name = os.environ.get("BREVO_SENDER_NAME") or os.environ.get("SENDER_NAME", "EBEN Recruitment")
+def _get_smtp_config():
+    login = os.environ.get("BREVO_SMTP_LOGIN")
+    password = os.environ.get("BREVO_SMTP_PASSWORD")
     sender_email = os.environ.get("BREVO_SENDER_EMAIL") or os.environ.get("SENDER_EMAIL")
-    if not sender_email:
-        logger.error("BREVO_SENDER_EMAIL environment variable is not configured.")
+    sender_name = os.environ.get("BREVO_SENDER_NAME") or os.environ.get("SENDER_NAME", "EBEN Recruitment")
+
+    if not login or not password or not sender_email:
+        logger.error(
+            f"Brevo SMTP configuration is incomplete. "
+            f"BREVO_SMTP_LOGIN={'SET' if login else 'MISSING'}, "
+            f"BREVO_SMTP_PASSWORD={'SET' if password else 'MISSING'}, "
+            f"BREVO_SENDER_EMAIL={'SET' if sender_email else 'MISSING'}"
+        )
         return None
-    return {"name": sender_name, "email": sender_email}
+
+    return {
+        "login": login,
+        "password": password,
+        "sender_email": sender_email,
+        "sender_name": sender_name
+    }
+
+
+def _send_smtp_email(to_email, to_name, subject, html_content):
+    """
+    Core function to send an email using Brevo SMTP relay via smtplib.
+    Returns True on confirmed send, False on any exception.
+    Logs full exception text (str(e)) with stack trace.
+    """
+    config = _get_smtp_config()
+    if not config:
+        logger.error("Cannot send email: Brevo SMTP configuration missing.")
+        return False
+
+    if not to_email:
+        logger.error("Cannot send email: recipient email address (to_email) is missing.")
+        return False
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = formataddr((config["sender_name"], config["sender_email"]))
+        msg["To"] = formataddr((to_name or "Candidate", to_email))
+
+        part_html = MIMEText(html_content, "html", "utf-8")
+        msg.attach(part_html)
+
+        logger.info(f"Connecting to SMTP server {SMTP_SERVER}:{SMTP_PORT} to send email to {to_email}...")
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(config["login"], config["password"])
+            server.sendmail(config["sender_email"], [to_email], msg.as_string())
+
+        logger.info(f"Email successfully sent via Brevo SMTP to {to_email}. Subject: '{subject}'")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to send SMTP email to {to_email} (Subject: '{subject}'): {str(e)}", exc_info=True)
+        return False
 
 
 def send_job_message_email(candidate_email, candidate_name, job_title, message_text):
     """
-    Sends an email update to a candidate regarding a job posting via Brevo's TransactionalEmailsApi.
+    Sends an email update to a candidate regarding a job posting via Brevo's SMTP relay.
     Returns True if sent successfully, False otherwise.
     """
-    if not candidate_email:
-        logger.error("Cannot send job message email: recipient email is missing.")
-        return False
-
-    api_instance = _get_api_instance()
-    sender = _get_sender()
-
-    if not api_instance or not sender:
-        logger.error("Cannot send job message email: Brevo configuration missing.")
-        return False
-
     display_name = candidate_name if candidate_name else "Candidate"
     subject = f"Update regarding your application for {job_title}"
     
@@ -55,47 +89,19 @@ def send_job_message_email(candidate_email, candidate_name, job_title, message_t
         <h2 style="color: #1C1C1C;">Hello {display_name},</h2>
         <p style="color: #333333; line-height: 1.6; white-space: pre-wrap;">{message_text}</p>
         <hr style="border: none; border-top: 1px solid #E0DAD3; margin: 24px 0;">
-        <p style="color: #6B6560; font-size: 14px;"><strong>Best regards,</strong><br>{sender['name']}</p>
+        <p style="color: #6B6560; font-size: 14px;"><strong>Best regards,</strong><br>The Recruitment Team</p>
     </div>
     """
-
-    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-        to=[{"email": candidate_email, "name": display_name}],
-        sender=sender,
-        subject=subject,
-        html_content=html_content
-    )
-
-    try:
-        response = api_instance.send_transac_email(send_smtp_email)
-        logger.info(f"Job message email sent successfully to {candidate_email}. Message ID: {getattr(response, 'message_id', 'N/A')}")
-        return True
-    except ApiException as e:
-        logger.error(f"Brevo API error sending job message email to {candidate_email}: {e}")
-        return False
-    except Exception as e:
-        logger.error(f"Unexpected error sending job message email to {candidate_email}: {e}")
-        return False
+    return _send_smtp_email(candidate_email, display_name, subject, html_content)
 
 
 def send_interview_invite_email(candidate_email, candidate_name, job_title, company_name):
     """
-    Sends an interview invitation email to a candidate via Brevo's TransactionalEmailsApi.
+    Sends an interview invitation email to a candidate via Brevo's SMTP relay.
     Returns True if sent successfully, False otherwise.
     """
-    if not candidate_email:
-        logger.error("Cannot send interview invite email: recipient email is missing.")
-        return False
-
-    api_instance = _get_api_instance()
-    sender = _get_sender()
-
-    if not api_instance or not sender:
-        logger.error("Cannot send interview invite email: Brevo configuration missing.")
-        return False
-
     display_name = candidate_name if candidate_name else "Candidate"
-    comp_name = company_name if company_name else sender.get("name", "EBEN Recruitment")
+    comp_name = company_name if company_name else "EBEN Recruitment"
     subject = f"Interview Invitation: {job_title} at {comp_name}"
 
     html_content = f"""
@@ -111,41 +117,14 @@ def send_interview_invite_email(candidate_email, candidate_name, job_title, comp
         <p style="color: #6B6560; font-size: 14px;"><strong>Best regards,</strong><br>The Recruitment Team at {comp_name}</p>
     </div>
     """
-
-    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-        to=[{"email": candidate_email, "name": display_name}],
-        sender=sender,
-        subject=subject,
-        html_content=html_content
-    )
-
-    try:
-        response = api_instance.send_transac_email(send_smtp_email)
-        logger.info(f"Interview invite email sent successfully to {candidate_email}. Message ID: {getattr(response, 'message_id', 'N/A')}")
-        return True
-    except ApiException as e:
-        logger.error(f"Brevo API error sending interview invite email to {candidate_email}: {e}")
-        return False
-    except Exception as e:
-        logger.error(f"Unexpected error sending interview invite email to {candidate_email}: {e}")
-        return False
+    return _send_smtp_email(candidate_email, display_name, subject, html_content)
 
 
-def send_application_received_email(candidate_email, candidate_name, job_title):
+def send_application_confirmation_email(candidate_email, candidate_name, job_title):
     """
-    Sends an application confirmation email to a candidate via Brevo's TransactionalEmailsApi.
+    Sends a short HTML email confirming application receipt via Brevo's SMTP relay.
+    Returns True if sent successfully, False otherwise.
     """
-    if not candidate_email:
-        logger.error("Cannot send application received email: recipient email is missing.")
-        return False
-
-    api_instance = _get_api_instance()
-    sender = _get_sender()
-
-    if not api_instance or not sender:
-        logger.error("Cannot send application received email: Brevo configuration missing.")
-        return False
-
     display_name = candidate_name if candidate_name else "Applicant"
     subject = f"Application Received: {job_title}"
 
@@ -156,28 +135,23 @@ def send_application_received_email(candidate_email, candidate_name, job_title):
         </div>
         <h2 style="color: #3A7D44;">Hello {display_name},</h2>
         <p style="color: #333333; line-height: 1.6;">Thank you for submitting your application for the position of <strong>{job_title}</strong>.</p>
-        <p style="color: #333333; line-height: 1.6;">We have successfully received your resume and credentials. Our evaluation team is currently reviewing applications, and you will receive an update regarding whether you are shortlisted or declined for the next stage of the recruitment process.</p>
+        <p style="color: #333333; line-height: 1.6;">We have successfully received your resume and credentials. Our team will review your application, and you will receive an update regarding whether you are shortlisted or declined for the role.</p>
         <p style="color: #333333; line-height: 1.6;">We appreciate your interest in joining our team.</p>
         <hr style="border: none; border-top: 1px solid #E0DAD3; margin: 24px 0;">
         <p style="color: #6B6560; font-size: 14px;"><strong>Best regards,</strong><br>The Recruitment Team</p>
     </div>
     """
+    return _send_smtp_email(candidate_email, display_name, subject, html_content)
 
-    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-        to=[{"email": candidate_email, "name": display_name}],
-        sender=sender,
-        subject=subject,
-        html_content=html_content
-    )
 
-    try:
-        response = api_instance.send_transac_email(send_smtp_email)
-        logger.info(f"Application received email sent successfully to {candidate_email}. Message ID: {getattr(response, 'message_id', 'N/A')}")
-        return True
-    except ApiException as e:
-        logger.error(f"Brevo API error sending application received email to {candidate_email}: {e}")
-        return False
-    except Exception as e:
-        logger.error(f"Unexpected error sending application received email to {candidate_email}: {e}")
-        return False
+# Backwards compatibility alias for application confirmation
+def send_application_received_email(candidate_email, candidate_name, job_title):
+    return send_application_confirmation_email(candidate_email, candidate_name, job_title)
 
+
+def send_custom_html_email(to_email, to_name, subject, html_content):
+    """
+    Sends a custom HTML email via Brevo SMTP relay.
+    Returns True if sent successfully, False otherwise.
+    """
+    return _send_smtp_email(to_email, to_name, subject, html_content)
