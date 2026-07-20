@@ -12,37 +12,43 @@ logger = logging.getLogger(__name__)
 
 
 def _get_smtp_config():
-    login = os.environ.get("BREVO_SMTP_LOGIN") or os.environ.get("BREVO_LOGIN") or "b1230e001@smtp-brevo.com"
+    login = os.environ.get("BREVO_SMTP_LOGIN") or os.environ.get("BREVO_LOGIN")
     password = os.environ.get("BREVO_SMTP_PASSWORD") or os.environ.get("BREVO_PASSWORD") or os.environ.get("BREVO_API_KEY")
-    sender_email = os.environ.get("BREVO_SENDER_EMAIL") or os.environ.get("SENDER_EMAIL") or "onitomiwa911@gmail.com"
-    sender_name = os.environ.get("BREVO_SENDER_NAME") or os.environ.get("SENDER_NAME") or "EBEN Recruitment"
+    sender_email = os.environ.get("BREVO_SENDER_EMAIL") or os.environ.get("SENDER_EMAIL")
+    sender_name = os.environ.get("BREVO_SENDER_NAME") or os.environ.get("SENDER_NAME") or "Resume Screening Team"
+    
+    try:
+        port = int(os.environ.get("BREVO_SMTP_PORT", 2525))
+    except (ValueError, TypeError):
+        port = 2525
 
     return {
         "login": login,
         "password": password,
         "sender_email": sender_email,
-        "sender_name": sender_name
+        "sender_name": sender_name,
+        "port": port
     }
 
 
 def _send_smtp_email(to_email, to_name, subject, html_content):
     """
-    Ultra-fast & resilient email dispatch for Brevo.
-    Tries SMTP 2525 (Fastest on Render) -> Brevo HTTP API -> SMTP 587 -> SMTP 465.
-    Returns True on success, False on failure with detailed error logging.
+    Email dispatch for Brevo using SMTP port 2525 (with HTTP API fallback if port is unreachable).
+    Returns True on success, False on failure with detailed exception logging.
     """
     config = _get_smtp_config()
     if not to_email:
         logger.error("Cannot send email: recipient email address (to_email) is missing.")
         return False
 
-    if not config["password"]:
-        logger.error("Cannot send email: BREVO_SMTP_PASSWORD or BREVO_API_KEY environment variable is missing!")
+    if not config["login"] or not config["password"] or not config["sender_email"]:
+        logger.error("Cannot send email: BREVO_SMTP_LOGIN, BREVO_SMTP_PASSWORD, or BREVO_SENDER_EMAIL environment variable is missing!")
         return False
 
     display_name = to_name or "Candidate"
+    port = config.get("port", 2525)
 
-    # --- Method 1: SMTP Port 2525 (Fastest on Render) ---
+    # --- Method 1: SMTP (Default Port 2525) ---
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
@@ -50,19 +56,19 @@ def _send_smtp_email(to_email, to_name, subject, html_content):
         msg["To"] = formataddr((display_name, to_email))
         msg.attach(MIMEText(html_content, "html", "utf-8"))
 
-        logger.info(f"[SMTP 2525] Sending via smtp-relay.brevo.com:2525 to {to_email}...")
-        with smtplib.SMTP("smtp-relay.brevo.com", 2525, timeout=5) as server:
+        logger.info(f"[SMTP {port}] Connecting to smtp-relay.brevo.com:{port} to send email to {to_email}...")
+        with smtplib.SMTP("smtp-relay.brevo.com", port, timeout=6) as server:
             server.ehlo()
             server.starttls()
             server.ehlo()
             server.login(config["login"], config["password"])
             server.sendmail(config["sender_email"], [to_email], msg.as_string())
-        logger.info(f"[SMTP 2525] Successfully sent email to {to_email}")
+        logger.info(f"[SMTP {port}] Successfully sent email to {to_email}")
         return True
     except Exception as e:
-        logger.warning(f"[SMTP 2525 Failed] {str(e)}. Trying Brevo HTTP API fallback...")
+        logger.warning(f"[SMTP {port} Failed] {str(e)}. Attempting Brevo HTTP API fallback...")
 
-    # --- Method 2: Brevo HTTP REST API ---
+    # --- Method 2: Brevo HTTP REST API Fallback ---
     try:
         logger.info(f"[HTTP API] Sending via Brevo REST API fallback for {to_email}...")
         headers = {
@@ -86,46 +92,9 @@ def _send_smtp_email(to_email, to_name, subject, html_content):
             logger.info(f"[HTTP API] Successfully sent email to {to_email}. Response: {response.text}")
             return True
         else:
-            logger.warning(f"[HTTP API Failed] Status: {response.status_code}, Body: {response.text}. Trying port 587...")
+            logger.error(f"[HTTP API Failed] Status: {response.status_code}, Body: {response.text}")
     except Exception as e:
-        logger.warning(f"[HTTP API Error] {str(e)}. Trying port 587...")
-
-    # --- Method 3: SMTP Port 587 (STARTTLS) ---
-    try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = formataddr((config["sender_name"], config["sender_email"]))
-        msg["To"] = formataddr((display_name, to_email))
-        msg.attach(MIMEText(html_content, "html", "utf-8"))
-
-        logger.info(f"[SMTP 587] Sending via smtp-relay.brevo.com:587 for {to_email}...")
-        with smtplib.SMTP("smtp-relay.brevo.com", 587, timeout=5) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(config["login"], config["password"])
-            server.sendmail(config["sender_email"], [to_email], msg.as_string())
-        logger.info(f"[SMTP 587] Successfully sent email to {to_email}")
-        return True
-    except Exception as e:
-        logger.warning(f"[SMTP 587 Failed] {str(e)}. Trying port 465 SSL...")
-
-    # --- Method 4: SMTP Port 465 (SSL) ---
-    try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = formataddr((config["sender_name"], config["sender_email"]))
-        msg["To"] = formataddr((display_name, to_email))
-        msg.attach(MIMEText(html_content, "html", "utf-8"))
-
-        logger.info(f"[SMTP 465] Sending via smtp-relay.brevo.com:465 for {to_email}...")
-        with smtplib.SMTP_SSL("smtp-relay.brevo.com", 465, timeout=5) as server:
-            server.login(config["login"], config["password"])
-            server.sendmail(config["sender_email"], [to_email], msg.as_string())
-        logger.info(f"[SMTP 465] Successfully sent email to {to_email}")
-        return True
-    except Exception as e:
-        logger.error(f"[SMTP 465 Error] Failed to send email to {to_email}: {str(e)}", exc_info=True)
+        logger.error(f"[HTTP API Error] Failed to send email to {to_email}: {str(e)}", exc_info=True)
 
     return False
 
@@ -155,7 +124,7 @@ def send_interview_invite_email(candidate_email, candidate_name, job_title, comp
     Returns True if sent successfully, False otherwise.
     """
     display_name = candidate_name if candidate_name else "Candidate"
-    comp_name = company_name if company_name else "EBEN Recruitment"
+    comp_name = company_name if company_name else "Resume Screening Team"
     subject = f"Interview Invitation: {job_title} at {comp_name}"
 
     html_content = f"""
