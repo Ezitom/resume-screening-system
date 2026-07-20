@@ -246,7 +246,7 @@
     }
 }
 
-/* Candidate name column - keep on one line */
+/* Candidate name column — keep on one line */
 .eben-table td:nth-child(2) {
     white-space: nowrap;
 }

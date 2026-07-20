@@ -82,7 +82,7 @@ Return ONLY the summary paragraph. No labels, no headers, no extra text.`;
 
   // ── STEP 4: EXTRACT STRUCTURED DATA ─────────────────────
   async function extractStructuredData(resumeText) {
-    const prompt = `You are an expert resume parser. Extract the following information from the resume text below and return it as a valid JSON object only. No markdown, no backticks, no extra text - just raw JSON.
+    const prompt = `You are an expert resume parser. Extract the following information from the resume text below and return it as a valid JSON object only. No markdown, no backticks, no extra text — just raw JSON.
 
 Resume Text:
 ${resumeText}
@@ -118,7 +118,7 @@ If a field cannot be found, use an empty string or empty array. Return ONLY the 
   async function generateScores(resumeText, sustainabilityAnswer = "") {
     const prompt = `You are a senior HR evaluator for a Candidate Sustainability Assessment System.
 Analyze the resume AND the candidate's sustainability statement below. Score the candidate across 7 categories.
-Return ONLY a raw JSON object - no markdown, no backticks, no explanation before or after the JSON.
+Return ONLY a raw JSON object — no markdown, no backticks, no explanation before or after the JSON.
 
 RESUME TEXT:
 ${resumeText}

@@ -18,8 +18,8 @@
         // Auth guard: runs as soon as scripts are ready
         (async function() {
             try {
-                 const session = await getCurrentSession();
-                 if (!session) window.location.href = '/login';
+                const session = await getCurrentSession();
+                if (!session) window.location.href = 'login.html';
             } catch (e) {
                 console.warn("Auth guard error (supabase may not be ready):", e);
             }
@@ -35,13 +35,13 @@
 <body class="eben-body--recruiter">
     <nav class="eben-nav">
         <div class="eben-container">
-            <a href="/" class="eben-logo">
+            <a href="index.html" class="eben-logo">
                 <span class="eben-logo-bar"></span>EBEN
             </a>
             <div class="eben-nav-links">
-                <a href="/dashboard" class="eben-nav-link active">Dashboard</a>
-                <a href="/job-postings" class="eben-nav-link">Job Postings</a>
-                <a href="/analytics" class="eben-nav-link">Analytics</a>
+                <a href="dashboard.html" class="eben-nav-link active">Dashboard</a>
+                <a href="job-postings.html" class="eben-nav-link">Job Postings</a>
+                <a href="analytics.html" class="eben-nav-link">Analytics</a>
             </div>
             <div class="eben-nav-actions">
                 <button id="invite-recruiter-btn" onclick="openInviteModal()" style="padding:8px 16px; background:#1a1a2e; color:#fff; border:none; border-radius:8px; font-size:14px; cursor:pointer;">
@@ -65,9 +65,9 @@
 
     <div class="eben-nav-overlay"></div>
     <div class="eben-nav-drawer">
-        <a href="/dashboard" class="eben-nav-link active">Dashboard</a>
-        <a href="/job-postings" class="eben-nav-link">Job Postings</a>
-        <a href="/analytics" class="eben-nav-link">Analytics</a>
+        <a href="dashboard.html" class="eben-nav-link active">Dashboard</a>
+        <a href="job-postings.html" class="eben-nav-link">Job Postings</a>
+        <a href="analytics.html" class="eben-nav-link">Analytics</a>
         <a href="#" class="eben-nav-link eben-logout-link" id="drawer-logout-btn">Logout</a>
     </div>
 

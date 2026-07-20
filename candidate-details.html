@@ -17,7 +17,7 @@
     <script type="module">
         (async function () {
             const session = await getCurrentSession();
-            if (!session) window.location.href = '/login';
+            if (!session) window.location.href = 'login.html';
         })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,13 +34,13 @@
 <body class="eben-body--recruiter">
     <nav class="eben-nav">
         <div class="eben-container">
-            <a href="/" class="eben-logo">
+            <a href="index.html" class="eben-logo">
                 <span class="eben-logo-bar"></span>EBEN
             </a>
             <div class="eben-nav-links">
-                <a href="/dashboard" class="eben-nav-link">Dashboard</a>
-                <a href="/job-postings" class="eben-nav-link">Job Postings</a>
-                <a href="/analytics" class="eben-nav-link">Analytics</a>
+                <a href="dashboard.html" class="eben-nav-link">Dashboard</a>
+                <a href="job-postings.html" class="eben-nav-link">Job Postings</a>
+                <a href="analytics.html" class="eben-nav-link">Analytics</a>
             </div>
             <div class="eben-nav-actions">
                 <span class="eben-nav-user eben-nav__recruiter-name" id="nav-recruiter-name">Recruiter</span>
@@ -62,16 +62,16 @@
 
     <div class="eben-nav-overlay"></div>
     <div class="eben-nav-drawer">
-        <a href="/dashboard" class="eben-nav-link">Dashboard</a>
-        <a href="/job-postings" class="eben-nav-link">Job Postings</a>
-        <a href="/analytics" class="eben-nav-link">Analytics</a>
+        <a href="dashboard.html" class="eben-nav-link">Dashboard</a>
+        <a href="job-postings.html" class="eben-nav-link">Job Postings</a>
+        <a href="analytics.html" class="eben-nav-link">Analytics</a>
         <a href="#" class="eben-nav-link eben-logout-link" id="drawer-logout-btn">Logout</a>
     </div>
 
     <main class="eben-recruiter-main">
         <div class="eben-container">
             <nav class="eben-breadcrumb">
-                <a href="/">Home</a> › <a href="/dashboard">Dashboard</a> › <span
+                <a href="index.html">Home</a> › <a href="dashboard.html">Dashboard</a> › <span
                     id="breadcrumb-name">Candidate</span>
             </nav>
 
@@ -138,18 +138,9 @@
                                     Send Rejection
                                 </button>
                             </div>
-                            <button id="invite-btn" class="eben-btn eben-btn-full" onclick="sendInterviewInvite()" style="background: var(--eben-accent); color: #fff; border: none; margin-top: 8px; width: 100%;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                    <line x1="16" y1="2" x2="16" y2="6"/>
-                                    <line x1="8" y1="2" x2="8" y2="6"/>
-                                    <line x1="3" y1="10" x2="21" y2="10"/>
-                                </svg>
-                                Invite for Interview
-                            </button>
                             <p id="shortlist-status" style="display:none; font-size: 0.85rem; margin-top: 8px; text-align: center;"></p>
 
-                            <a href="/dashboard" class="eben-back-link">&larr; Back to Dashboard</a>
+                            <a href="dashboard.html" class="eben-back-link">&larr; Back to Dashboard</a>
                         </div>
                     </div>
                 </aside>
@@ -160,7 +151,7 @@
                     <div id="ai-evaluation-section" style="display:none; margin-bottom: 24px;">
                       <div class="eben-card eval-card" style="margin-bottom: 24px;">
                         <h3 class="eben-uppercase-label">Resume Summary</h3>
-                        <p id="resume-summary-text">-</p>
+                        <p id="resume-summary-text">—</p>
                       </div>
                       <div class="eben-card eval-card" style="margin-bottom: 24px;">
                         <h3 class="eben-uppercase-label">Technical Skills</h3>
@@ -240,7 +231,7 @@
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--eben-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                                     Sustainability &amp; Values Statement
                                 </h3>
-                                <p id="sustainability-statement-text" style="line-height: 1.7; color: var(--eben-text-primary); font-style: italic; white-space: pre-wrap;">-</p>
+                                <p id="sustainability-statement-text" style="line-height: 1.7; color: var(--eben-text-primary); font-style: italic; white-space: pre-wrap;">—</p>
                             </div>
 
                             <div class="eben-summary-section">

@@ -24,7 +24,7 @@
     <!-- Top Nav -->
     <nav class="eben-nav--login">
         <div class="eben-nav__inner">
-            <a href="/" class="eben-logo">
+            <a href="index.html" class="eben-logo">
                 <span class="eben-logo-bar"></span>EBEN
             </a>
         </div>
@@ -64,7 +64,7 @@
                         <input type="checkbox" id="rememberMe" class="eben-checkbox">
                         <span>Remember me</span>
                     </label>
-                    <a href="/forgot-password" class="eben-auth-link" style="margin-left: auto;">Forgot password?</a>
+                    <a href="forgot-password.html" class="eben-auth-link" style="margin-left: auto;">Forgot password?</a>
                 </div>
 
                 <button class="eben-btn eben-btn-primary eben-btn-full" id="login-btn" type="submit">
@@ -117,7 +117,7 @@
 
             try {
                 await loginRecruiter(emailInput.value, passwordInput.value);
-                window.location.href = "/dashboard";
+                window.location.href = "dashboard.html";
             } catch (err) {
                 // Map generic invalid login errors to "Incorrect email or password" to prevent user enumeration
                 if (err.message.includes("Invalid login credentials") || err.message.toLowerCase().includes("invalid")) {

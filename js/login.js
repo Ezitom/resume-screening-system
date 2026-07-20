@@ -56,7 +56,7 @@ const ebenLogin = {
                 }));
 
                 setTimeout(function() {
-                    window.location.href = '/dashboard';
+                    window.location.href = 'dashboard.html';
                 }, 800);
             });
         }

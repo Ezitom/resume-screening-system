@@ -1,6 +1,4 @@
 /* candidate-details.js */
-import { API_BASE_URL } from './config.js';
-
 
 const ebenCandidateDetails = {
     candidateId: null,
@@ -23,7 +21,7 @@ const ebenCandidateDetails = {
         this.candidateData = null;
         this.resetUI();
 
-        // loadCandidateFromSupabase is async - loadSavedState and ebenRenderResumeTab
+        // loadCandidateFromSupabase is async — loadSavedState and ebenRenderResumeTab
         // are called at the END of that function after data is ready.
         this.loadCandidateFromSupabase();
 
@@ -665,31 +663,12 @@ const ebenCandidateDetails = {
     handleSendEmail() {
         const modal = document.getElementById('candidate-email-modal');
         const sendBtn = modal.querySelector('button[type="submit"]');
-        const to = document.getElementById('email-to')?.value || '';
-        const subject = document.getElementById('email-subject')?.value || '';
-        const body = document.getElementById('email-body')?.value || '';
 
         sendBtn.disabled = true;
         sendBtn.textContent = 'Sending...';
 
-        const html = body.replace(/\n/g, '<br>');
-
-        fetch(API_BASE_URL + '/api/send-email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                to: to,
-                subject: subject,
-                html: html
-            })
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Failed to send email');
-            return response.json();
-        })
-        .then(data => {
+        setTimeout(() => {
+            // Save sent state
             const sentEmails = JSON.parse(localStorage.getItem('eben-email-sent') || '{}');
             const email = this.candidateData ? this.candidateData.email : '';
             if (email) {
@@ -697,20 +676,14 @@ const ebenCandidateDetails = {
                 localStorage.setItem('eben-email-sent', JSON.stringify(sentEmails));
             }
 
+            // Show success
             const formContent = document.getElementById('candidate-email-form');
             const successContent = document.getElementById('candidate-email-success');
-            const successEmailEl = document.getElementById('success-email');
-            if (successEmailEl) successEmailEl.textContent = to;
             if (formContent) formContent.style.display = 'none';
             if (successContent) successContent.style.display = 'block';
 
             this.showSentIndicator();
-        })
-        .catch(err => {
-            alert('Failed to send email: ' + err.message);
-            sendBtn.disabled = false;
-            sendBtn.textContent = 'Send Email';
-        });
+        }, 1500);
     }
 };
 
@@ -743,7 +716,7 @@ async function sendShortlistEmail() {
     statusEl.style.display = 'none';
 
     try {
-        const response = await fetch(API_BASE_URL + '/api/send-email', {
+        const response = await fetch('/api/send-email', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -813,7 +786,7 @@ async function sendRejectionEmail() {
     statusEl.style.display = 'none';
 
     try {
-        const response = await fetch(API_BASE_URL + '/api/send-email', {
+        const response = await fetch('/api/send-email', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -862,62 +835,6 @@ async function sendRejectionEmail() {
     }
 }
 
-async function sendInterviewInvite() {
-    const inviteBtn = document.getElementById('invite-btn');
-    const statusEl = document.getElementById('shortlist-status');
-
-    const candidateName = document.getElementById('sidebar-candidate-name')?.textContent || 'Candidate';
-    const candidateEmail = document.getElementById('sidebar-candidate-email')?.textContent || '';
-    const jobTitle = document.getElementById('sidebar-candidate-job')?.textContent || 'the position';
-
-    if (!candidateEmail || candidateEmail === 'No Email') {
-        statusEl.style.display = 'block';
-        statusEl.style.color = 'var(--eben-danger)';
-        statusEl.textContent = 'No email address found for this candidate.';
-        return;
-    }
-
-    inviteBtn.disabled = true;
-    inviteBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px; animation: eben-spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Sending...';
-    statusEl.style.display = 'none';
-
-    try {
-        const response = await fetch(API_BASE_URL + '/api/interview-invite', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                candidate_name: candidateName,
-                candidate_email: candidateEmail,
-                job_title: jobTitle,
-                company_name: 'EBEN Recruitment'
-            })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || 'Failed to send interview invitation');
-        }
-
-        statusEl.style.display = 'block';
-        statusEl.style.color = 'var(--eben-success)';
-        statusEl.textContent = `Interview invitation sent successfully to ${candidateEmail}`;
-        inviteBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Invitation Sent';
-        inviteBtn.style.background = '#22c55e';
-
-    } catch (err) {
-        console.error('[ERROR] Interview invite error:', err);
-        statusEl.style.display = 'block';
-        statusEl.style.color = 'var(--eben-danger)';
-        statusEl.textContent = 'Failed to send invitation: ' + err.message;
-        inviteBtn.disabled = false;
-        inviteBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Invite for Interview';
-    }
-}
-
 // Expose functions globally
 window.sendShortlistEmail = sendShortlistEmail;
 window.sendRejectionEmail = sendRejectionEmail;
-window.sendInterviewInvite = sendInterviewInvite;

@@ -4,24 +4,11 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-image: url('../assets/auth-bg.png');
-  background-color: #111111;
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('../assets/auth-bg.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  position: relative;
   overflow-x: hidden;
-}
-
-.eben-login-body::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 0;
 }
 
 .eben-nav--login {
