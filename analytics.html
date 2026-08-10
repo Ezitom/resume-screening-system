@@ -16,7 +16,7 @@
     <script type="module">
         (async function() {
             const session = await getCurrentSession();
-            if (!session) window.location.href = 'login.html';
+            if (!session) window.location.href = 'login';
         })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,13 +30,13 @@
 <body class="eben-body--recruiter">
     <nav class="eben-nav">
         <div class="eben-container">
-            <a href="index.html" class="eben-logo">
+            <a href="/" class="eben-logo">
                 <span class="eben-logo-bar"></span>EBEN
             </a>
             <div class="eben-nav-links">
-                <a href="dashboard.html" class="eben-nav-link">Dashboard</a>
-                <a href="job-postings.html" class="eben-nav-link">Job Postings</a>
-                <a href="analytics.html" class="eben-nav-link active">Analytics</a>
+                <a href="dashboard" class="eben-nav-link">Dashboard</a>
+                <a href="job-postings" class="eben-nav-link">Job Postings</a>
+                <a href="analytics" class="eben-nav-link active">Analytics</a>
             </div>
             <div class="eben-nav-actions">
                 <span class="eben-nav-user eben-nav__recruiter-name" id="nav-recruiter-name">Recruiter</span>
@@ -57,9 +57,9 @@
 
     <div class="eben-nav-overlay"></div>
     <div class="eben-nav-drawer">
-        <a href="dashboard.html" class="eben-nav-link">Dashboard</a>
-        <a href="job-postings.html" class="eben-nav-link">Job Postings</a>
-        <a href="analytics.html" class="eben-nav-link active">Analytics</a>
+        <a href="dashboard" class="eben-nav-link">Dashboard</a>
+        <a href="job-postings" class="eben-nav-link">Job Postings</a>
+        <a href="analytics" class="eben-nav-link active">Analytics</a>
         <a href="#" class="eben-nav-link eben-logout-link" id="drawer-logout-btn">Logout</a>
     </div>
 

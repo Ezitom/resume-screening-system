@@ -27,6 +27,20 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       {
+        name: 'clean-urls-middleware',
+        configureServer(server) {
+          server.middlewares.use((req, res, next) => {
+            if (req.url && !req.url.startsWith('/api') && !req.url.startsWith('/@') && !req.url.includes('.')) {
+              const [path, query] = req.url.split('?');
+              if (path && path !== '/') {
+                req.url = `${path}.html${query ? '?' + query : ''}`;
+              }
+            }
+            next();
+          });
+        }
+      },
+      {
         name: 'api-middleware',
         configureServer(server) {
           server.middlewares.use(async (req, res, next) => {

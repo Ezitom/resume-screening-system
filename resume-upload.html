@@ -27,7 +27,7 @@
 <body>
   <header class="eben-minimal-header">
     <div class="eben-container">
-      <a href="index.html" class="eben-logo eben-logo-centered">
+      <a href="/" class="eben-logo eben-logo-centered">
         <span class="eben-logo-bar"></span>EBEN
       </a>
       <button class="eben-theme-toggle eben-header-toggle" aria-label="Toggle Theme">
@@ -169,17 +169,17 @@
         <div class="eben-footer-nav">
           <h4 class="eben-uppercase-label eben-footer-section-label">Platform</h4>
           <ul class="eben-footer-links">
-            <li><a href="index.html" class="eben-footer-link">Home</a></li>
-            <li><a href="open-positions.html" class="eben-footer-link">Open Positions</a></li>
+            <li><a href="/" class="eben-footer-link">Home</a></li>
+            <li><a href="open-positions" class="eben-footer-link">Open Positions</a></li>
           </ul>
         </div>
         <div class="eben-footer-info">
           <h4 class="eben-uppercase-label eben-footer-section-label">Information</h4>
           <ul class="eben-footer-links">
-            <li><a href="index.html#how-it-works" class="eben-footer-link">How It Works</a></li>
-            <li><a href="privacy-policy.html" class="eben-footer-link">Privacy Policy</a></li>
-            <li><a href="terms-of-use.html" class="eben-footer-link">Terms of Use</a></li>
-            <li><a href="support.html" class="eben-footer-link">Support</a></li>
+            <li><a href="/#how-it-works" class="eben-footer-link">How It Works</a></li>
+            <li><a href="privacy-policy" class="eben-footer-link">Privacy Policy</a></li>
+            <li><a href="terms-of-use" class="eben-footer-link">Terms of Use</a></li>
+            <li><a href="support" class="eben-footer-link">Support</a></li>
           </ul>
         </div>
       </div>
@@ -291,13 +291,46 @@
         return;
       }
 
-      try {
-        const evaluation = await ResumeEvaluator.evaluate(file, sustainabilityAnswer);
-        const candidateId = Date.now().toString();
+      const urlParams = new URLSearchParams(window.location.search);
+      const jobId = urlParams.get("jobId");
+      const jobTitle = urlParams.get("job") || "Unknown Job";
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const jobTitle = urlParams.get("job") || "Unknown Job";
-        const jobId = urlParams.get("jobId") || "";
+      if (!jobId) {
+        statusEl.style.display = "none";
+        errorEl.style.display = "block";
+        errorEl.textContent = "Application Error: Job ID is missing from the URL. Candidate evaluation requires an active job posting context.";
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+
+      const { data: fetchedJob, error: jobFetchError } = await supabaseClient
+        .from("jobs")
+        .select("*")
+        .eq("id", jobId)
+        .single();
+
+      if (jobFetchError || !fetchedJob) {
+        console.error("[ERROR] Failed to fetch job posting details:", jobFetchError);
+        statusEl.style.display = "none";
+        errorEl.style.display = "block";
+        errorEl.textContent = "Application Error: Could not retrieve job posting details for evaluation. " + (jobFetchError?.message || "Job position not found.");
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+
+      const jobPosting = {
+        id: fetchedJob.id,
+        title: fetchedJob.title || jobTitle,
+        department: fetchedJob.department || "",
+        description: fetchedJob.description || "",
+        experienceLevel: fetchedJob.experience_level || "",
+        mustHaveSkills: fetchedJob.must_have || fetchedJob.required_skills || fetchedJob.skills || "",
+        niceToHaveSkills: fetchedJob.nice_to_have || fetchedJob.preferred_skills || ""
+      };
+
+      try {
+        const evaluation = await ResumeEvaluator.evaluate(file, sustainabilityAnswer, jobPosting);
+        const candidateId = Date.now().toString();
 
         const candidateRecord = {
           id: candidateId,

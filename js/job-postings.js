@@ -220,7 +220,7 @@ getJobs() {
                 </div>
                 <div class="eben-job-card-footer">
                     <span class="eben-badge eben-badge-${job.status === 'Open' ? 'success' : 'danger'}">${job.status}</span>
-                    <a href="dashboard.html" class="eben-btn eben-btn-outline view-applicants" data-job-title="${job.title}">View Applicants</a>
+                    <a href="dashboard" class="eben-btn eben-btn-outline view-applicants" data-job-title="${job.title}">View Applicants</a>
                 </div>
             `;
             grid.appendChild(card);

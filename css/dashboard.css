@@ -207,42 +207,39 @@
 
 @media (max-width: 768px) {
     .eben-stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
 
     .eben-filter-bar {
         flex-direction: column;
         align-items: stretch;
+        gap: 16px;
+    }
+
+    .eben-filter-group {
+        width: 100%;
+        min-width: 100%;
     }
 
     .eben-filter-actions {
         justify-content: space-between;
+        width: 100%;
     }
 
-    /* --- Navbar overflow fix --- */
-    .eben-nav .eben-container {
-        flex-wrap: wrap;
-        gap: 8px;
+    .eben-filter-actions .eben-btn {
+        min-height: 44px;
+        padding: 10px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .eben-stats-grid {
+        grid-template-columns: 1fr;
     }
 
-    .eben-nav-actions {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .eben-nav-user,
-    .eben-nav__recruiter-name {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 120px;
-        display: inline-block;
-    }
-
-    .eben-nav-actions button[onclick="openInviteModal()"] {
-        padding: 6px 10px;
-        font-size: 12px;
-        white-space: nowrap;
+    .eben-stat-card {
+        padding: 16px;
     }
 }
 

@@ -59,12 +59,12 @@ async function loginRecruiter(email, password) {
 async function logoutRecruiter() {
   const client = getSupabaseClient();
   if (!client || !client.auth) {
-    window.location.href = "login.html";
+    window.location.href = "login";
     return;
   }
   const { error } = await client.auth.signOut();
   if (error) throw new Error(error.message);
-  window.location.href = "login.html";
+  window.location.href = "login";
 }
 
 // ── GET CURRENT SESSION ──────────────────────────────────
@@ -91,7 +91,7 @@ async function sendPasswordReset(email) {
   }
   const { error } = await client.auth.resetPasswordForEmail(
     email.trim(),
-    { redirectTo: window.location.origin + "/reset-password.html" }
+    { redirectTo: window.location.origin + "/reset-password" }
   );
   if (error) throw new Error(error.message);
 }
@@ -134,7 +134,7 @@ async function requireAuth() {
   const session = await getCurrentSession();
   if (!session) {
     // Not logged in — redirect to login page
-    window.location.href = "login.html";
+    window.location.href = "login";
     return null;
   }
   return session;
@@ -144,7 +144,7 @@ async function requireAuth() {
 async function redirectIfLoggedIn() {
   const session = await getCurrentSession();
   if (session) {
-    window.location.href = "dashboard.html";
+    window.location.href = "dashboard";
   }
 }
 

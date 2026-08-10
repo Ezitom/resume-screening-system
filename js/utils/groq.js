@@ -4,8 +4,19 @@ const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 console.log("Groq API key type:", typeof GROQ_API_KEY);
 
-export async function askGroq(prompt) {
+export async function askGroq(prompt, options = {}) {
   try {
+    const payload = {
+      model: GROQ_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.3,
+      max_tokens: 2048
+    };
+
+    if (options.jsonMode) {
+      payload.response_format = { type: "json_object" };
+    }
+
     const response = await fetch(GROQ_URL, {
       method: "POST",
       mode: "cors",
@@ -13,12 +24,7 @@ export async function askGroq(prompt) {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${GROQ_API_KEY}`
       },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.3,
-        max_tokens: 2048
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {

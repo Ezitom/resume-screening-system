@@ -110,11 +110,13 @@
     
     .eben-page-header {
         flex-direction: column;
-        gap: 24px;
+        gap: 20px;
+        align-items: stretch;
     }
-    
-    .eben-btn {
+
+    .eben-page-header .eben-btn {
         width: 100%;
+        min-height: 44px;
     }
 
     .eben-job-card-footer {

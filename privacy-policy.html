@@ -55,19 +55,34 @@
 <body>
     <nav class="eben-nav">
         <div class="eben-container">
-            <a href="index.html" class="eben-logo">
+            <a href="/" class="eben-logo">
                 <span class="eben-logo-bar"></span>EBEN
             </a>
             <div class="eben-nav-links">
-                <a href="open-positions.html" class="eben-nav-link">Open Positions</a>
+                <a href="/" class="eben-nav-link">Home</a>
+                <a href="open-positions" class="eben-nav-link">Open Positions</a>
             </div>
             <div class="eben-nav-actions">
                 <button class="eben-theme-toggle" aria-label="Toggle Theme">
                     <!-- Icon injected by theme.js -->
                 </button>
+                <button class="eben-hamburger" aria-label="Open Menu">
+                    <svg class="eben-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg>
+                </button>
             </div>
         </div>
     </nav>
+
+    <div class="eben-nav-overlay"></div>
+    <div class="eben-nav-drawer">
+        <a href="/" class="eben-nav-link">Home</a>
+        <a href="open-positions" class="eben-nav-link">Open Positions</a>
+        <a href="privacy-policy" class="eben-nav-link active">Privacy Policy</a>
+    </div>
 
     <main>
         <div class="eben-legal-container">
@@ -98,7 +113,7 @@
                 <p>For privacy-related inquiries, contact us at <a href="mailto:privacy@eben-platform.com" style="color: var(--eben-accent);">privacy@eben-platform.com</a></p>
             </div>
 
-            <a href="index.html" class="eben-back-home">← Back to Home</a>
+            <a href="/" class="eben-back-home">← Back to Home</a>
         </div>
     </main>
 
@@ -115,17 +130,17 @@
                 <div class="eben-footer-nav">
                     <h4 class="eben-uppercase-label eben-footer-section-label">Platform</h4>
                     <ul class="eben-footer-links">
-                        <li><a href="index.html" class="eben-footer-link">Home</a></li>
-                        <li><a href="open-positions.html" class="eben-footer-link">Open Positions</a></li>
+                        <li><a href="/" class="eben-footer-link">Home</a></li>
+                        <li><a href="open-positions" class="eben-footer-link">Open Positions</a></li>
                     </ul>
                 </div>
                 <div class="eben-footer-info">
                     <h4 class="eben-uppercase-label eben-footer-section-label">Information</h4>
                     <ul class="eben-footer-links">
-                        <li><a href="index.html#how-it-works" class="eben-footer-link">How It Works</a></li>
-                        <li><a href="privacy-policy.html" class="eben-footer-link">Privacy Policy</a></li>
-                        <li><a href="terms-of-use.html" class="eben-footer-link">Terms of Use</a></li>
-                        <li><a href="support.html" class="eben-footer-link">Support</a></li>
+                        <li><a href="/#how-it-works" class="eben-footer-link">How It Works</a></li>
+                        <li><a href="privacy-policy" class="eben-footer-link">Privacy Policy</a></li>
+                        <li><a href="terms-of-use" class="eben-footer-link">Terms of Use</a></li>
+                        <li><a href="support" class="eben-footer-link">Support</a></li>
                     </ul>
                 </div>
             </div>
@@ -137,5 +152,6 @@
     </footer>
 
     <script type="module" src="js/theme.js"></script>
+    <script type="module" src="js/nav.js"></script>
 </body>
 </html>

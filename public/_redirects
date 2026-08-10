@@ -1,0 +1,18 @@
+# Netlify Clean URLs Rewrites (200 internal rewrite for clean routing)
+/dashboard          /dashboard.html          200
+/job-postings       /job-postings.html       200
+/candidate-details  /candidate-details.html  200
+/analytics          /analytics.html          200
+/open-positions     /open-positions.html    200
+/resume-upload      /resume-upload.html     200
+/login              /login.html              200
+/signup             /signup.html             200
+/forgot-password    /forgot-password.html    200
+/reset-password     /reset-password.html     200
+/set-password       /set-password.html       200
+/support            /support.html            200
+/privacy-policy     /privacy-policy.html    200
+/terms-of-use       /terms-of-use.html       200
+
+# Canonical 301 redirects if someone accesses .html URL directly
+/*.html             /:splat                  301!

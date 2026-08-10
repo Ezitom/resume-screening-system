@@ -122,7 +122,7 @@ document.getElementById('signupBtn').addEventListener('click', function() {
       email: newAccount.email,
       loggedIn: true
     }));
-    window.location.href = 'dashboard.html';
+    window.location.href = 'dashboard';
   }, 1000);
 });
 

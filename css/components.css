@@ -267,33 +267,136 @@
 }
 
 /* --- Mobile Navigation --- */
+/* --- Theme Toggle & Hamburger --- */
+.eben-theme-toggle {
+    background: none;
+    border: none;
+    color: #E0DAD3;
+    cursor: pointer;
+    padding: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 6px;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.eben-theme-toggle:hover {
+    color: var(--eben-accent);
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
 .eben-hamburger {
     display: none;
     background: none;
     border: none;
-    color: var(--eben-nav-text);
+    color: #E0DAD3;
     cursor: pointer;
-    font-size: 1.5rem;
     padding: 8px;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
 }
 
+.eben-hamburger:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* --- Mobile Navigation Drawer --- */
 .eben-nav-drawer {
     position: fixed;
     top: 0;
-    right: -280px;
-    width: 280px;
+    right: -100%;
+    width: min(300px, 85vw);
     height: 100%;
-    background-color: var(--eben-nav-bg);
+    background-color: var(--eben-surface);
+    color: var(--eben-text-primary);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.25);
     z-index: 2001;
-    padding: 40px 24px;
-    transition: right 0.3s ease;
+    padding: 24px 20px;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
+    overflow-y: auto;
 }
 
 .eben-nav-drawer.active {
     right: 0;
+}
+
+.eben-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--eben-border);
+    margin-bottom: 8px;
+}
+
+.eben-drawer-close {
+    background: none;
+    border: none;
+    color: var(--eben-text-primary);
+    cursor: pointer;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.eben-drawer-close:hover {
+    background-color: var(--eben-row-alt);
+}
+
+.eben-nav-drawer .eben-nav-link {
+    color: var(--eben-text-primary);
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: 6px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.eben-nav-drawer .eben-nav-link:hover,
+.eben-nav-drawer .eben-nav-link.active {
+    background-color: var(--eben-row-alt);
+    color: var(--eben-accent);
+}
+
+.eben-nav-drawer-user {
+    padding: 12px 16px;
+    background-color: var(--eben-row-alt);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.eben-nav-drawer-user-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--eben-text-secondary);
+    letter-spacing: 0.05em;
+}
+
+.eben-nav-drawer-user-name {
+    font-weight: 600;
+    color: var(--eben-accent);
+    font-size: 0.9375rem;
 }
 
 .eben-nav-overlay {
@@ -302,7 +405,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--eben-modal-backdrop);
     z-index: 2000;
     opacity: 0;
     visibility: hidden;
@@ -316,6 +419,21 @@
 
 /* --- Mobile --- */
 @media (max-width: 768px) {
+    .eben-nav-links {
+        display: none !important;
+    }
+
+    .eben-hamburger {
+        display: inline-flex !important;
+    }
+
+    /* Hide desktop recruiter actions on top bar on mobile */
+    .eben-nav-actions .eben-nav-user,
+    .eben-nav-actions .eben-logout-link,
+    .eben-nav-actions #invite-recruiter-btn {
+        display: none !important;
+    }
+
     .eben-footer-grid {
         grid-template-columns: 1fr;
         gap: 32px;
@@ -325,14 +443,6 @@
         flex-direction: column;
         gap: 8px;
         text-align: center;
-    }
-
-    .eben-nav-links {
-        display: none;
-    }
-
-    .eben-hamburger {
-        display: block;
     }
 
     .eben-modal {
