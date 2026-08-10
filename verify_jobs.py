@@ -1,9 +1,8 @@
-import urllib.request
-import json
+import os
 
-SUPABASE_URL = "https://iruzaaplerviivzcnnyl.supabase.co"
-ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlydXphYXBsZXJ2aWl2emNubnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDQwOTMsImV4cCI6MjA5NDY4MDA5M30.akeNab9dtPz9fVouW-Lligd7boq93x0hRcZfRY5NBC0"
-SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlydXphYXBsZXJ2aWl2emNubnlsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTEwNDA5MywiZXhwIjoyMDk0NjgwMDkzfQ.ItiK_3mx28lu8Fa0J7M7HqzBt1XQxWhTxpkxFTKbLPo"
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://iruzaaplerviivzcnnyl.supabase.co")
+ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
+SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
 def fetch_jobs(key, role_name, query_params=""):
     url = f"{SUPABASE_URL}/rest/v1/jobs?select=*{query_params}"

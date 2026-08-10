@@ -2,8 +2,8 @@ import urllib.request
 import json
 import os
 
-supabase_url = "https://iruzaaplerviivzcnnyl.supabase.co"
-service_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlydXphYXBsZXJ2aWl2emNubnlsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTEwNDA5MywiZXhwIjoyMDk0NjgwMDkzfQ.ItiK_3mx28lu8Fa0J7M7HqzBt1XQxWhTxpkxFTKbLPo"
+supabase_url = os.environ.get("SUPABASE_URL", "https://iruzaaplerviivzcnnyl.supabase.co")
+service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
 headers = {
     "apikey": service_key,

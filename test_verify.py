@@ -1,9 +1,8 @@
-import urllib.request
-import json
+import os
 
-supabase_url = "https://iruzaaplerviivzcnnyl.supabase.co"
-anon_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlydXphYXBsZXJ2aWl2emNubnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDQwOTMsImV4cCI6MjA5NDY4MDA5M30.akeNab9dtPz9fVouW-Lligd7boq93x0hRcZfRY5NBC0"
-service_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlydXphYXBsZXJ2aWl2emNubnlsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTEwNDA5MywiZXhwIjoyMDk0NjgwMDkzfQ.ItiK_3mx28lu8Fa0J7M7HqzBt1XQxWhTxpkxFTKbLPo"
+supabase_url = os.environ.get("SUPABASE_URL", "https://iruzaaplerviivzcnnyl.supabase.co")
+anon_key = os.environ.get("SUPABASE_ANON_KEY", "")
+service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
 def query_jobs(key, label):
     url = f"{supabase_url}/rest/v1/jobs?select=*"

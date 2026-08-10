@@ -902,14 +902,14 @@ async function sendRecruiterInvite() {
 
   try {
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-    const SERVICE_ROLE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+    const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
     const inviteResponse = await fetch(`${SUPABASE_URL}/auth/v1/invite`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "apikey": SERVICE_ROLE_KEY,
-        "Authorization": `Bearer ${SERVICE_ROLE_KEY}`
+        "apikey": ANON_KEY,
+        "Authorization": `Bearer ${ANON_KEY}`
       },
       body: JSON.stringify({
         email: email,
