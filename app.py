@@ -33,16 +33,33 @@ def health_check():
 
 
 # Initialize Supabase Client
-supabase_url = os.environ.get("SUPABASE_URL")
-supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY")
+supabase_url = (os.environ.get("SUPABASE_URL") or "").strip().strip('"').strip("'")
+service_key = (os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or "").strip().strip('"').strip("'")
+anon_key = (os.environ.get("SUPABASE_ANON_KEY") or "").strip().strip('"').strip("'")
+
 supabase: Client = None
 
-if supabase_url and supabase_key:
-    try:
-        supabase = create_client(supabase_url, supabase_key)
-        logger.info("Supabase client initialized successfully.")
-    except Exception as e:
-        logger.error(f"Failed to initialize Supabase client: {e}")
+if supabase_url:
+    # Prioritize valid JWT keys (Supabase keys always start with 'eyJ')
+    keys_to_try = []
+    if service_key:
+        keys_to_try.append(service_key)
+    if anon_key and anon_key not in keys_to_try:
+        keys_to_try.append(anon_key)
+
+    # Sort so keys starting with 'eyJ' are tried first
+    keys_to_try.sort(key=lambda k: 0 if k.startswith("eyJ") else 1)
+
+    for key in keys_to_try:
+        try:
+            supabase = create_client(supabase_url, key)
+            logger.info("Supabase client initialized successfully.")
+            break
+        except Exception as e:
+            logger.warning(f"Attempt to initialize Supabase client failed: {e}")
+
+    if not supabase:
+        logger.error("Failed to initialize Supabase client: All provided keys failed or were invalid.")
 else:
     logger.warning("Supabase environment variables are missing!")
 
