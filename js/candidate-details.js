@@ -198,7 +198,7 @@ const ebenCandidateDetails = {
                 score: candidate.overall_score || 0,
                 status: realStatus,
                 date: candidate.date_applied ? new Date(candidate.date_applied).toLocaleDateString() : "",
-                sustainability: candidate.sustainability_score >= 80 ? 'Highly Suitable' : (candidate.sustainability_score >= 50 ? 'Suitable' : 'Marginally Suitable'),
+                sustainability: (() => { const s = candidate.sustainability_score || 0; return s >= 80 ? 'Highly Suitable' : s >= 50 ? 'Suitable' : s >= 30 ? 'Marginally Suitable' : 'Not Suitable'; })(),
                 scoreBreakdown: cleanedScoreReasons,
                 resumeSummary: candidate.resume_summary,
                 sustainabilityAnswer: candidate.sustainability_answer || "",
@@ -239,7 +239,7 @@ const ebenCandidateDetails = {
             setField("gauge-score-text", candidate.overall_score || 0);
             setField("sidebar-candidate-score", candidate.overall_score || 0);
 
-            const sustainabilityVal = candidate.sustainability_score >= 80 ? 'Highly Suitable' : (candidate.sustainability_score >= 50 ? 'Suitable' : 'Marginally Suitable');
+            const sustainabilityVal = (() => { const s = candidate.sustainability_score || 0; return s >= 80 ? 'Highly Suitable' : s >= 50 ? 'Suitable' : s >= 30 ? 'Marginally Suitable' : 'Not Suitable'; })();
             setField("evaluation-suitability", sustainabilityVal);
 
             // Update status badge and dropdown with real status

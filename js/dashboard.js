@@ -106,9 +106,11 @@ const ebenDashboard = {
         if (!usingFallback) {
             this.allCandidates = candidatesData.map(c => {
                 let sustainScore = c.sustainability_score || 0;
-                let sustainVal = 'Marginally Suitable';
+                let sustainVal;
                 if (sustainScore >= 80) sustainVal = 'Highly Suitable';
                 else if (sustainScore >= 50) sustainVal = 'Suitable';
+                else if (sustainScore >= 30) sustainVal = 'Marginally Suitable';
+                else sustainVal = 'Not Suitable';
 
                 // Look up status from applications table, fallback to localStorage
                 const localStatuses = JSON.parse(localStorage.getItem('eben-candidate-statuses') || '{}');
@@ -302,6 +304,7 @@ const ebenDashboard = {
         if (s === 'Highly Suitable') return 'success';
         if (s === 'Suitable') return 'info';
         if (s === 'Marginally Suitable') return 'warning';
+        if (s === 'Not Suitable') return 'danger';
         return 'danger';
     },
 

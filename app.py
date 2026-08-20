@@ -280,7 +280,7 @@ def reject_candidate():
 
 ALLOWED_RECOMMENDATIONS = ["Highly Suitable", "Suitable", "Under Review", "Not Suitable"]
 
-def ask_groq(prompt, json_mode=False):
+def ask_groq(prompt, json_mode=False, max_tokens=2048):
     groq_api_key = (os.environ.get("GROQ_API_KEY") or "").strip().strip('"').strip("'")
     groq_model = (os.environ.get("GROQ_MODEL") or "openai/gpt-oss-120b").strip().strip('"').strip("'")
     
@@ -292,7 +292,7 @@ def ask_groq(prompt, json_mode=False):
         "model": groq_model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3,
-        "max_tokens": 2048
+        "max_tokens": max_tokens
     }
     if json_mode:
         payload["response_format"] = {"type": "json_object"}
@@ -470,16 +470,16 @@ overallScore = Math.round((skillsMatch * 0.35) + (experienceLevel * 0.25) + (edu
   }}
 }}"""
 
-        summary = ask_groq(summary_prompt)
+        summary = ask_groq(summary_prompt, max_tokens=500)
 
-        raw_structured = ask_groq(structured_prompt, json_mode=True)
+        raw_structured = ask_groq(structured_prompt, json_mode=True, max_tokens=1700)
         cleaned_structured = raw_structured.replace("```json", "").replace("```", "").strip()
         try:
             structured = json.loads(cleaned_structured)
         except Exception:
             structured = {"technicalSkills": [], "education": [], "experience": [], "yearsOfExperience": "", "name": "", "email": "", "phone": ""}
 
-        raw_scores = ask_groq(scores_prompt, json_mode=True)
+        raw_scores = ask_groq(scores_prompt, json_mode=True, max_tokens=1400)
         cleaned_scores = raw_scores.replace("```json", "").replace("```", "").strip()
         try:
             scores = json.loads(cleaned_scores)
