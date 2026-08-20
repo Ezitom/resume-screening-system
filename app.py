@@ -302,13 +302,22 @@ def ask_groq(prompt, json_mode=False):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
     }
 
-    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
-    with urllib.request.urlopen(req) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
-        choice = data.get("choices", [{}])[0]
-        msg = choice.get("message", {})
-        content = msg.get("content") or msg.get("reasoning") or ""
-        return content
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
+            with urllib.request.urlopen(req, timeout=35) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                choice = data.get("choices", [{}])[0]
+                msg = choice.get("message", {})
+                content = msg.get("content") or msg.get("reasoning") or ""
+                return content
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt < max_retries - 1:
+                logging.warning(f"Groq API 429 Rate Limit (attempt {attempt + 1}/{max_retries}). Retrying in 2.5s...")
+                time.sleep(2.5)
+                continue
+            raise e
 
 
 @app.route('/api/evaluate-resume', methods=['POST'])
