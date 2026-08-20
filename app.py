@@ -1,13 +1,20 @@
 # app.py
 import os
+import json
 import logging
+import datetime
+import urllib.request
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 # Load local environment variables (if .env exists)
 load_dotenv()
-from supabase import create_client, Client
+try:
+    from supabase import create_client, Client
+except ImportError:
+    create_client = None
+    Client = None
 from email_service import (
     send_job_message_email,
     send_interview_invite_email,
@@ -265,6 +272,242 @@ def reject_candidate():
         logger.exception("Error in reject candidate endpoint")
         return jsonify({"message": str(e)}), 500
 
+
+# ============================================================
+# SERVER-SIDE RESUME EVALUATION (GROQ AI API)
+# ============================================================
+
+ALLOWED_RECOMMENDATIONS = ["Highly Suitable", "Suitable", "Under Review", "Not Suitable"]
+
+def ask_groq(prompt, json_mode=False):
+    groq_api_key = (os.environ.get("GROQ_API_KEY") or "").strip().strip('"').strip("'")
+    groq_model = (os.environ.get("GROQ_MODEL") or "openai/gpt-oss-120b").strip().strip('"').strip("'")
+    
+    if not groq_api_key:
+        raise ValueError("GROQ_API_KEY environment variable is missing on server.")
+
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    payload = {
+        "model": groq_model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.3,
+        "max_tokens": 2048
+    }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
+
+    headers = {
+        "Authorization": f"Bearer {groq_api_key}",
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    }
+
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
+    with urllib.request.urlopen(req) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        choice = data.get("choices", [{}])[0]
+        msg = choice.get("message", {})
+        content = msg.get("content") or msg.get("reasoning") or ""
+        return content
+
+
+@app.route('/api/evaluate-resume', methods=['POST'])
+@app.route('/api/evaluate', methods=['POST'])
+def evaluate_resume():
+    try:
+        data = request.get_json() or {}
+        resume_text = data.get("resume_text") or data.get("resumeText") or ""
+        sustainability_answer = data.get("sustainability_statement") or data.get("sustainabilityAnswer") or ""
+        job_posting = data.get("job_posting") or data.get("jobPosting") or {}
+
+        if not resume_text:
+            return jsonify({"message": "Missing required field: resume_text"}), 400
+        if not job_posting or not isinstance(job_posting, dict):
+            return jsonify({"message": "Job posting data is required for evaluation."}), 400
+
+        job_title = job_posting.get("title") or job_posting.get("job_title") or "Unspecified Role"
+        job_description = job_posting.get("description") or "No description provided."
+        required_skills = job_posting.get("mustHaveSkills") or job_posting.get("must_have") or job_posting.get("required_skills") or job_posting.get("skills") or "Not explicitly specified."
+        preferred_skills = job_posting.get("niceToHaveSkills") or job_posting.get("nice_to_have") or job_posting.get("preferred_skills") or "Not explicitly specified."
+        required_experience = job_posting.get("experienceLevel") or job_posting.get("experience_level") or "Not explicitly specified."
+
+        # 1. Summary Generation
+        summary_prompt = f"""You are an expert HR professional. Based on the resume text below, write a concise professional summary of this candidate in 3-4 sentences. Focus on their key strengths, experience level, and what makes them stand out. Write in third person. CRITICAL: Always use gender-neutral pronouns (they/them/their) or refer to them as "the candidate". Do not assume or guess their gender under any circumstances.
+
+Resume Text:
+{resume_text}
+
+Return ONLY the summary paragraph. No labels, no headers, no extra text."""
+
+        # 2. Structured Data Extraction
+        structured_prompt = f"""You are an expert resume parser. Extract the following information from the resume text below and return it as a valid JSON object only. No markdown, no backticks, no extra text — just raw JSON.
+
+Resume Text:
+{resume_text}
+
+Return this exact JSON structure:
+{{
+  "technicalSkills": ["skill1", "skill2", "skill3"],
+  "education": [
+    {{ "degree": "...", "institution": "...", "year": "..." }}
+  ],
+  "experience": [
+    {{ "title": "...", "company": "...", "duration": "...", "responsibilities": "..." }}
+  ],
+  "yearsOfExperience": "...",
+  "name": "...",
+  "email": "...",
+  "phone": "..."
+}}
+
+If a field cannot be found, use an empty string or empty array. Return ONLY the JSON object."""
+
+        # 3. Category Scoring & Rubric
+        scores_prompt = f"""You are a senior HR evaluator and talent acquisition specialist.
+Analyze the candidate's resume AND sustainability statement against the specific job posting requirements below.
+Score the candidate across 6 distinct categories and compute the exact overall weighted score.
+
+Return ONLY a raw JSON object matching the exact schema specified. No markdown fences, no backticks, no text before or after the JSON.
+
+==================================================
+1. JOB POSTING DETAILS
+==================================================
+Job Title: {job_title}
+Experience Level Required: {required_experience}
+Job Description: {job_description}
+Must-Have / Required Skills: {required_skills}
+Nice-to-Have / Preferred Skills: {preferred_skills}
+
+==================================================
+2. CANDIDATE RESUME TEXT
+==================================================
+{resume_text}
+
+==================================================
+3. CANDIDATE SUSTAINABILITY STATEMENT
+==================================================
+{sustainability_answer or "No sustainability statement provided."}
+
+==================================================
+4. EVALUATION RUBRIC & SCORING BANDS
+==================================================
+Evaluate the candidate across the following categories (0-100 score each):
+
+1. skillsMatch (Weight: 35%):
+   Compare candidate's technical and soft skills directly against the Must-Have and Nice-to-Have lists above. Use these exact scoring bands:
+   - 90-100: Meets all must-haves + most nice-to-haves.
+   - 70-89: Meets all must-haves, missing some nice-to-haves.
+   - 50-69: Missing 1-2 core must-have skills.
+   - <50: Missing major must-have skills.
+
+2. experienceLevel (Weight: 25%):
+   Evaluate candidate's total years of experience, seniority, and past roles explicitly against what this specific job requires ({required_experience}). Do not score experience in isolation; evaluate suitability for this specific role.
+
+3. education (Weight: 15%):
+   Score based on degree level, institution, field relevance, and academic/professional certifications relative to the job position.
+
+4. communication (Weight: 10%):
+   Score based on document structure, clarity, professional tone, formatting, and articulation of achievements in the resume.
+
+5. leadership (Weight: 5%):
+   Score based on evidence of project ownership, team management, mentoring, initiative, or leadership roles in the resume.
+
+6. sustainability (Weight: 10%):
+   Score based PRIMARILY on the candidate's sustainability statement. Consider environmental awareness, social responsibility, community involvement, ethical work practices, values-driven projects, and mentoring.
+   - Detailed, genuine statement: 70-100.
+   - Vague or minimal statement: 30-50.
+   - Empty statement: 0.
+
+OVERALL WEIGHTED SCORE FORMULA:
+Calculate overallScore using this exact formula:
+overallScore = Math.round((skillsMatch * 0.35) + (experienceLevel * 0.25) + (education * 0.15) + (communication * 0.10) + (leadership * 0.05) + (sustainability * 0.10))
+
+==================================================
+5. REQUIRED JSON OUTPUT SCHEMA
+==================================================
+{{
+  "skillsMatch": {{
+    "score": <number 0-100>,
+    "matchedSkills": ["skill1", "skill2"],
+    "missingSkills": ["missingSkill1"],
+    "reason": "<Detailed justification citing specific matched and missing requirements>"
+  }},
+  "experienceLevel": {{
+    "score": <number 0-100>,
+    "yearsFound": "<e.g. 5 years>",
+    "reason": "<Detailed justification evaluating candidate experience against the job's required experience level>"
+  }},
+  "education": {{
+    "score": <number 0-100>,
+    "reason": "<Justification referencing candidate degree and relevance to role>"
+  }},
+  "communication": {{
+    "score": <number 0-100>,
+    "reason": "<Justification referencing document clarity and structure>"
+  }},
+  "leadership": {{
+    "score": <number 0-100>,
+    "reason": "<Justification referencing evidence of initiative or leadership>"
+  }},
+  "sustainability": {{
+    "score": <number 0-100>,
+    "reason": "<Justification referencing specific sustainability statement content and resume evidence>"
+  }},
+  "overallScore": {{
+    "score": <number 0-100>,
+    "recommendation": "<Must be exactly one of: 'Highly Suitable' | 'Suitable' | 'Under Review' | 'Not Suitable'>",
+    "reason": "<Holistic summary of fit, key strengths, and critical gaps relative to the job posting>"
+  }}
+}}"""
+
+        summary = ask_groq(summary_prompt)
+
+        raw_structured = ask_groq(structured_prompt, json_mode=True)
+        cleaned_structured = raw_structured.replace("```json", "").replace("```", "").strip()
+        try:
+            structured = json.loads(cleaned_structured)
+        except Exception:
+            structured = {"technicalSkills": [], "education": [], "experience": [], "yearsOfExperience": "", "name": "", "email": "", "phone": ""}
+
+        raw_scores = ask_groq(scores_prompt, json_mode=True)
+        cleaned_scores = raw_scores.replace("```json", "").replace("```", "").strip()
+        try:
+            scores = json.loads(cleaned_scores)
+            if isinstance(scores, dict) and "overallScore" in scores:
+                rec = scores["overallScore"].get("recommendation")
+                if rec not in ALLOWED_RECOMMENDATIONS:
+                    score_val = float(scores["overallScore"].get("score") or 0)
+                    if score_val >= 80:
+                        scores["overallScore"]["recommendation"] = "Highly Suitable"
+                    elif score_val >= 65:
+                        scores["overallScore"]["recommendation"] = "Suitable"
+                    elif score_val >= 50:
+                        scores["overallScore"]["recommendation"] = "Under Review"
+                    else:
+                        scores["overallScore"]["recommendation"] = "Not Suitable"
+        except Exception as e:
+            logger.error(f"Score parse error in backend evaluate_resume: {e}. Raw: {raw_scores}")
+            return jsonify({"message": f"Evaluation parsing failed: {e}"}), 500
+
+        result = {
+            "resumeText": resume_text,
+            "sustainabilityAnswer": sustainability_answer,
+            "summary": summary,
+            "technicalSkills": structured.get("technicalSkills") or [],
+            "education": structured.get("education") or [],
+            "experience": structured.get("experience") or [],
+            "yearsOfExperience": structured.get("yearsOfExperience") or "",
+            "extractedName": structured.get("name") or "",
+            "extractedEmail": structured.get("email") or "",
+            "extractedPhone": structured.get("phone") or "",
+            "scores": scores,
+            "dateApplied": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }
+        return jsonify(result), 200
+
+    except Exception as e:
+        logger.exception("Error in evaluate_resume endpoint")
+        return jsonify({"message": str(e)}), 500
 
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@ evaluation system built with JavaScript, Vite, Supabase, and the Groq AI API.
 ## Tech Stack
 - Frontend: HTML, CSS, JavaScript
 - Build Tool: Vite
-- AI Engine: Groq API (Llama 3 70B)
+- AI Engine: Groq API (openai/gpt-oss-120b via Flask Backend)
 - Database: Supabase (PostgreSQL)
 - Authentication: Supabase Auth
 - Resume Parsing: pdf.js, mammoth.js
