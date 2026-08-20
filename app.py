@@ -1,6 +1,7 @@
 # app.py
 import os
 import json
+import time
 import logging
 import datetime
 import urllib.request
@@ -514,6 +515,11 @@ overallScore = Math.round((skillsMatch * 0.35) + (experienceLevel * 0.25) + (edu
         }
         return jsonify(result), 200
 
+    except urllib.error.HTTPError as e:
+        logger.exception("HTTP error in evaluate_resume endpoint")
+        if e.code == 429:
+            return jsonify({"message": "AI Evaluation service is currently experiencing high demand. Please wait a few seconds and try submitting again."}), 429
+        return jsonify({"message": f"Resume evaluation failed: {str(e)}"}), 500
     except Exception as e:
         logger.exception("Error in evaluate_resume endpoint")
         return jsonify({"message": str(e)}), 500
